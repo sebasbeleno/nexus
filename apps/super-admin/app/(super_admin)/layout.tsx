@@ -1,4 +1,4 @@
-import "../globals.css";
+import "@workspace/ui/globals.css"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@workspace/ui/components/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { redirect } from "next/navigation";
