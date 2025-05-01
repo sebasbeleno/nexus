@@ -3,6 +3,7 @@
 import { encodedRedirect } from "@/utils/utils";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { UserRole } from "@workspace/types"; 
 
 
 export const signInAction = async (formData: FormData) => {
@@ -19,20 +20,34 @@ export const signInAction = async (formData: FormData) => {
     return encodedRedirect("error", "/", error.message);
   }
 
-  // Check if user has super_admin role
+  // Check user role
   const { data: userData, error: userError } = await supabase
     .from('users')
     .select('role')
     .eq('id', data.user.id)
-    .single()
+    .single<{ role: UserRole }>() // Use the UserRole type
 
-  if (userError || !userData || userData.role !== 'super_admin') {
-    // Sign out the user since they don't have appropriate permissions
+  if (userError || !userData) {
+    // Sign out the user if role check fails
     await supabase.auth.signOut()
-    return encodedRedirect("error", "/", "Invalid email or password");
+    return encodedRedirect("error", "/", "Could not retrieve user role.");
   }
 
-  return redirect("/dashboard");
+  // Redirect based on role
+  switch (userData.role) {
+    // super_admin should likely use a different app/login, deny access here
+    case 'super_admin':
+      await supabase.auth.signOut()
+      return encodedRedirect("error", "/", "Access denied for this application.");
+    case 'admin':
+      return redirect("/admin");
+    case 'analyst':
+      return redirect("/analyst");
+    default:
+      // Sign out users with other roles (e.g., 'surveyor') or if role is unexpected
+      await supabase.auth.signOut()
+      return encodedRedirect("error", "/", "Access denied for this application.");
+  }
 };
 
 
