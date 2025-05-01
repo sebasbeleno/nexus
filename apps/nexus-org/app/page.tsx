@@ -27,28 +27,28 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
 
         <nav className="hidden md:flex items-center space-x-8">
           <Link href="#" className="text-gray-600 hover:text-[#093733]">
-            Home
+            Inicio
           </Link>
           <Link href="#" className="text-gray-600 hover:text-[#093733]">
-            Services
+            Servicios
           </Link>
           <Link href="#" className="text-gray-600 hover:text-[#093733]">
-            Platform
+            Plataforma
           </Link>
           <Link href="#" className="text-gray-600 hover:text-[#093733]">
-            Case Studies
+            Casos de Estudio
           </Link>
           <Link href="#" className="text-gray-600 hover:text-[#093733]">
-            Contact
+            Contacto
           </Link>
         </nav>
 
         <div className="flex items-center space-x-4">
           <Link href="/login" className="text-[#093733] hover:text-[#093733]/80 hidden md:block">
-            Log in
+            Iniciar sesión
           </Link>
           <Link href="#" className="bg-[#093733] text-white px-4 py-2 rounded-full hover:bg-[#093733]/90 transition">
-            Get in touch
+            Ponerse en contacto
           </Link>
           <button className="md:hidden text-[#093733]">
             <Menu size={24} />
@@ -72,11 +72,11 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
         <div className="container mx-auto px-4 py-20 md:py-32 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="text-white space-y-6">
-              <p className="text-sm md:text-base">#1 Housing Survey Solutions Provider</p>
+              <p className="text-sm md:text-base">Proveedor #1 de Soluciones de Encuestas de Vivienda</p>
               <h1 className="text-5xl md:text-7xl font-light leading-tight">
-                Data-Driven
+                Perspectivas de Vivienda
                 <br />
-                Housing Insights
+                Basadas en Datos
               </h1>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -84,14 +84,14 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
                   href="#"
                   className="bg-white text-[#093733] px-6 py-3 rounded-full inline-flex items-center justify-center hover:bg-[#E8E8D3] transition group w-fit"
                 >
-                  Get in touch
+                  Ponerse en contacto
                   <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <Link
                   href="#"
                   className="border border-white text-white px-6 py-3 rounded-full inline-flex items-center justify-center hover:bg-white/10 transition group w-fit"
                 >
-                  Our services
+                  Nuestros servicios
                   <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
@@ -112,14 +112,14 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
                 </div>
                 <Image
                   src="/case.jpg?height=200&width=200"
-                  alt="Housing survey dashboard"
+                  alt="Panel de control de encuesta de vivienda"
                   width={200}
                   height={200}
                   className="w-full h-40 object-cover rounded-md mb-4"
                 />
                 <div className="text-[#093733]">
-                  <p className="font-medium">Explore Our</p>
-                  <p className="font-bold">Latest Case Study</p>
+                  <p className="font-medium">Explora Nuestro</p>
+                  <p className="font-bold">Último Caso de Estudio</p>
                 </div>
               </div>
             </div>
@@ -133,15 +133,15 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center md:text-left">
               <h3 className="text-4xl md:text-5xl font-bold text-[#093733]">500+</h3>
-              <p className="text-[#91856C] mt-2">Surveys completed nationwide</p>
+              <p className="text-[#91856C] mt-2">Encuestas completadas a nivel nacional</p>
             </div>
             <div className="text-center">
               <h3 className="text-4xl md:text-5xl font-bold text-[#093733]">50K</h3>
-              <p className="text-[#91856C] mt-2">Housing units analyzed</p>
+              <p className="text-[#91856C] mt-2">Unidades de vivienda analizadas</p>
             </div>
             <div className="text-center md:text-right">
               <h3 className="text-4xl md:text-5xl font-bold text-[#093733]">98%</h3>
-              <p className="text-[#91856C] mt-2">Client satisfaction rate</p>
+              <p className="text-[#91856C] mt-2">Tasa de satisfacción del cliente</p>
             </div>
           </div>
         </div>
@@ -153,18 +153,16 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
               <h2 className="text-3xl md:text-4xl font-medium">
-                <span className="text-[#093733]">Focusing on accuracy,</span>
-                <span className="text-[#91856C]"> we deliver actionable insights</span>
+                <span className="text-[#093733]">Centrándonos en la precisión,</span>
+                <span className="text-[#91856C]"> entregamos perspectivas accionables</span>
               </h2>
             </div>
             <div>
               <p className="text-gray-600 mb-4">
-                We ensure that every survey we conduct meets the highest standards of data quality. Our comprehensive
-                approach provides organizations with reliable information for informed decision-making in housing and
-                urban development.
+                Nos aseguramos de que cada encuesta que realizamos cumpla con los más altos estándares de calidad de datos. Nuestro enfoque integral proporciona a las organizaciones información confiable para la toma de decisiones informadas en vivienda y desarrollo urbano.
               </p>
               <Link href="#" className="text-[#093733] font-medium inline-flex items-center group">
-                Learn more about our methodology
+                Aprende más sobre nuestra metodología
                 <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
@@ -176,9 +174,9 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#093733]">Our Core Services</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-[#093733]">Nuestros Servicios Principales</h2>
             <p className="text-[#91856C] mt-4 max-w-2xl mx-auto">
-              Comprehensive housing survey solutions that transform data into actionable insights
+              Soluciones integrales de encuestas de vivienda que transforman datos en perspectivas accionables
             </p>
           </div>
 
@@ -187,10 +185,9 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
               <div className="w-12 h-12 bg-[#093733] text-white rounded-full flex items-center justify-center mb-4">
                 <ClipboardList size={20} />
               </div>
-              <h3 className="text-xl font-bold text-[#093733] mb-2">Professional Survey Deployment</h3>
+              <h3 className="text-xl font-bold text-[#093733] mb-2">Despliegue Profesional de Encuestas</h3>
               <p className="text-[#91856C]">
-                Qualified field personnel conducting customized housing surveys with rigorous quality assurance
-                protocols.
+                Personal de campo calificado que realiza encuestas de vivienda personalizadas con rigurosos protocolos de aseguramiento de calidad.
               </p>
             </div>
 
@@ -198,10 +195,9 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
               <div className="w-12 h-12 bg-[#093733] text-white rounded-full flex items-center justify-center mb-4">
                 <BarChart2 size={20} />
               </div>
-              <h3 className="text-xl font-bold text-[#093733] mb-2">Data Analysis Platform</h3>
+              <h3 className="text-xl font-bold text-[#093733] mb-2">Plataforma de Análisis de Datos</h3>
               <p className="text-[#91856C]">
-                Interactive dashboards for data visualization with custom filtering tools and automated report
-                generation.
+                Paneles interactivos para visualización de datos con herramientas de filtrado personalizadas y generación automática de informes.
               </p>
             </div>
 
@@ -209,9 +205,9 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
               <div className="w-12 h-12 bg-[#093733] text-white rounded-full flex items-center justify-center mb-4">
                 <Map size={20} />
               </div>
-              <h3 className="text-xl font-bold text-[#093733] mb-2">Business Intelligence</h3>
+              <h3 className="text-xl font-bold text-[#093733] mb-2">Inteligencia de Negocios</h3>
               <p className="text-[#91856C]">
-                Expert consultation on survey design with trend analysis and actionable recommendations.
+                Consulta experta sobre diseño de encuestas con análisis de tendencias y recomendaciones accionables.
               </p>
             </div>
           </div>
@@ -223,23 +219,22 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to transform your housing data?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">¿Listo para transformar tus datos de vivienda?</h2>
               <p className="text-white/80 mb-6">
-                Join organizations and governments who have already improved their housing and urban development
-                decisions with our comprehensive survey solutions.
+                Únete a organizaciones y gobiernos que ya han mejorado sus decisiones de vivienda y desarrollo urbano con nuestras soluciones integrales de encuestas.
               </p>
               <Link
                 href="#"
                 className="bg-white text-[#093733] px-6 py-3 rounded-full inline-flex items-center justify-center hover:bg-[#E8E8D3] transition group"
               >
-                Schedule a consultation
+                Programar una consulta
                 <ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
             <div className="hidden md:block">
               <Image
                 src="/placeholder.svg?height=300&width=500"
-                alt="Data dashboard visualization"
+                alt="Visualización del panel de datos"
                 width={500}
                 height={300}
                 className="rounded-lg object-cover"
@@ -253,9 +248,9 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
       <section className="py-16 bg-[#E8E8D3]/10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#093733]">Our Process</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-[#093733]">Nuestro Proceso</h2>
             <p className="text-[#91856C] mt-4 max-w-2xl mx-auto">
-              A streamlined approach to gathering and analyzing housing data
+              Un enfoque simplificado para recopilar y analizar datos de vivienda
             </p>
           </div>
 
@@ -264,32 +259,32 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
               <div className="w-16 h-16 bg-[#093733] text-white rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-xl font-bold">1</span>
               </div>
-              <h3 className="text-xl font-bold text-[#093733] mb-2">Consultation</h3>
-              <p className="text-[#91856C]">We work with you to understand your specific needs and objectives.</p>
+              <h3 className="text-xl font-bold text-[#093733] mb-2">Consulta</h3>
+              <p className="text-[#91856C]">Trabajamos contigo para entender tus necesidades y objetivos específicos.</p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-[#093733] text-white rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-xl font-bold">2</span>
               </div>
-              <h3 className="text-xl font-bold text-[#093733] mb-2">Survey Design</h3>
-              <p className="text-[#91856C]">Our experts create customized surveys tailored to your requirements.</p>
+              <h3 className="text-xl font-bold text-[#093733] mb-2">Diseño de Encuesta</h3>
+              <p className="text-[#91856C]">Nuestros expertos crean encuestas personalizadas adaptadas a tus requisitos.</p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-[#093733] text-white rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-xl font-bold">3</span>
               </div>
-              <h3 className="text-xl font-bold text-[#093733] mb-2">Data Collection</h3>
-              <p className="text-[#91856C]">Professional field teams gather accurate and comprehensive data.</p>
+              <h3 className="text-xl font-bold text-[#093733] mb-2">Recolección de Datos</h3>
+              <p className="text-[#91856C]">Implementamos encuestas utilizando metodologías rigurosas y personal capacitado.</p>
             </div>
 
             <div className="text-center">
               <div className="w-16 h-16 bg-[#093733] text-white rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-xl font-bold">4</span>
               </div>
-              <h3 className="text-xl font-bold text-[#093733] mb-2">Analysis & Insights</h3>
-              <p className="text-[#91856C]">Transform raw data into actionable insights through our platform.</p>
+              <h3 className="text-xl font-bold text-[#093733] mb-2">Análisis e Informes</h3>
+              <p className="text-[#91856C]">Proporcionamos perspectivas detalladas y recomendaciones accionables.</p>
             </div>
           </div>
         </div>
@@ -299,30 +294,24 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-[#093733]">What Our Clients Say</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-[#093733]">Lo Que Dicen Nuestros Clientes</h2>
           </div>
 
           <div className="max-w-4xl mx-auto bg-[#E8E8D3]/20 p-8 rounded-lg">
             <div className="flex flex-col md:flex-row gap-8 items-center">
-              <div className="w-24 h-24 rounded-full overflow-hidden flex-shrink-0">
-                <Image
-                  src="/placeholder.svg?height=96&width=96"
-                  alt="Client portrait"
-                  width={96}
-                  height={96}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <Image
+                src="/placeholder.svg?height=100&width=100"
+                alt="Foto del cliente"
+                width={100}
+                height={100}
+                className="rounded-full"
+              />
               <div>
-                <p className="text-[#091856C] italic mb-4">
-                  "Nexus transformed our approach to urban housing development. The data insights we received were
-                  invaluable in making informed decisions about our community development projects. Their team was
-                  professional, thorough, and delivered beyond our expectations."
+                <p className="text-gray-600 italic mb-4">
+                  "Nexus nos proporcionó los datos precisos que necesitábamos para asegurar la financiación de nuestro último proyecto de desarrollo. Su plataforma es intuitiva y su equipo es increíblemente solidario."
                 </p>
-                <div>
-                  <p className="font-bold text-[#093733]">Sarah Johnson</p>
-                  <p className="text-[#91856C]">Director of Urban Planning, Metro City Government</p>
-                </div>
+                <p className="font-bold text-[#093733]">Jane Doe</p>
+                <p className="text-[#91856C]">Directora de Desarrollo Urbano, Ciudad Ejemplo</p>
               </div>
             </div>
           </div>
@@ -344,112 +333,58 @@ export default async function Home(props: { searchParams: Promise<Message> }) {
                 </span>
                 Nexus
               </span>
-              <p className="text-[#91856C] mb-1">by Sensia Company</p>
-              <p className="text-[#91856C] mb-4">
-                Comprehensive housing survey solutions for informed decision-making.
-              </p>
+              <p className="text-[#91856C] text-sm">Perspectivas de vivienda basadas en datos</p>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-[#093733] mb-4">Enlaces Rápidos</h4>
+              <nav className="flex flex-col space-y-2">
+                <Link href="#" className="text-gray-600 hover:text-[#093733]">
+                  Inicio
+                </Link>
+                <Link href="#" className="text-gray-600 hover:text-[#093733]">
+                  Servicios
+                </Link>
+                <Link href="#" className="text-gray-600 hover:text-[#093733]">
+                  Plataforma
+                </Link>
+                <Link href="#" className="text-gray-600 hover:text-[#093733]">
+                  Contacto
+                </Link>
+              </nav>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-[#093733] mb-4">Legal</h4>
+              <nav className="flex flex-col space-y-2">
+                <Link href="#" className="text-gray-600 hover:text-[#093733]">
+                  Política de Privacidad
+                </Link>
+                <Link href="#" className="text-gray-600 hover:text-[#093733]">
+                  Términos de Servicio
+                </Link>
+              </nav>
+            </div>
+
+            <div>
+              <h4 className="font-bold text-[#093733] mb-4">Síguenos</h4>
               <div className="flex space-x-4">
-                <a href="#" className="text-[#093733] hover:text-[#093733]/80">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3V2z" fill="currentColor" />
+                <Link href="#" className="text-gray-600 hover:text-[#093733]">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    {/* Placeholder for social icon */}
                   </svg>
-                </a>
-                <a href="#" className="text-[#093733] hover:text-[#093733]/80">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"
-                      fill="currentColor"
-                    />
+                </Link>
+                <Link href="#" className="text-gray-600 hover:text-[#093733]">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    {/* Placeholder for social icon */}
                   </svg>
-                </a>
-                <a href="#" className="text-[#093733] hover:text-[#093733]/80">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"
-                      fill="currentColor"
-                    />
-                    <rect x="2" y="9" width="4" height="12" fill="currentColor" />
-                    <circle cx="4" cy="4" r="2" fill="currentColor" />
-                  </svg>
-                </a>
+                </Link>
               </div>
-            </div>
-
-            <div>
-              <h3 className="text-[#093733] font-bold mb-4">Company</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="#" className="text-[#91856C] hover:text-[#093733]">
-                    About Sensia
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-[#91856C] hover:text-[#093733]">
-                    Our Team
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-[#91856C] hover:text-[#093733]">
-                    Careers
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-[#91856C] hover:text-[#093733]">
-                    Contact Us
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-[#093733] font-bold mb-4">Services</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="#" className="text-[#91856C] hover:text-[#093733]">
-                    Survey Deployment
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-[#91856C] hover:text-[#093733]">
-                    Data Analysis
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-[#91856C] hover:text-[#093733]">
-                    Business Intelligence
-                  </Link>
-                </li>
-                <li>
-                  <Link href="#" className="text-[#91856C] hover:text-[#093733]">
-                    Consulting
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-[#093733] font-bold mb-4">Newsletter</h3>
-              <p className="text-[#91856C] mb-4">
-                Subscribe to our newsletter for the latest insights in housing data.
-              </p>
-              <form className="flex">
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  className="px-4 py-2 rounded-l-full border-2 border-[#093733] focus:outline-none flex-1"
-                />
-                <button
-                  type="submit"
-                  className="bg-[#093733] text-white px-4 py-2 rounded-r-full hover:bg-[#093733]/90 transition"
-                >
-                  <ArrowRight size={16} />
-                </button>
-              </form>
             </div>
           </div>
 
           <div className="border-t border-[#91856C]/20 mt-8 pt-8 text-center text-[#91856C]">
-            <p>&copy; {new Date().getFullYear()} Sensia Company. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Sensia Company. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
