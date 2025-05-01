@@ -68,21 +68,35 @@ export const updateSession = async (request: NextRequest) => {
     // Handle authenticated users
     console.log(`User ${user.id} authenticated.`);
 
+    const { data: userProfile, error: userError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single<{ role: UserRole }>() // Use the UserRole type
+
+
+    if (userError) {
+      console.error("Error fetching user profile:", userError.message);
+      await supabase.auth.signOut(); // Sign out the user if there's an error fetching their profile
+      // Handle error fetching user profile
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
+
     // Role-based access control
     // Ensure app_metadata exists and has the role property
-    const role = user.app_metadata?.role as UserRole | undefined;
+    const role = userProfile?.role || "guest"; // Default to "guest" if role is not found
     console.log(`User role: ${role}`);
 
     // Protect /admin route
     if (pathname.startsWith("/admin") && role !== "admin") {
       console.log(`Redirecting user ${user.id} from /admin due to insufficient role: ${role}`);
-      return NextResponse.redirect(new URL("/", request.url)); // Or a specific unauthorized page
+      return NextResponse.rewrite(new URL('/404', request.url));
     }
 
     // Protect /analyst route
     if (pathname.startsWith("/analyst") && role !== "analyst") {
       console.log(`Redirecting user ${user.id} from /analyst due to insufficient role: ${role}`);
-      return NextResponse.redirect(new URL("/", request.url)); // Or a specific unauthorized page
+      return NextResponse.rewrite(new URL('/404', request.url));
     }
 
     // Allow access for authorized users or to other authenticated routes
