@@ -8,6 +8,10 @@ import {
   SquareTerminal,
   Users,
   Settings,
+  LayoutDashboard, // Added
+  ClipboardList, // Added
+  BarChart2, // Added
+  Building, // Added
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -27,12 +31,75 @@ import { useTheme } from "next-themes"
 
 interface AppSidebarProps {
   user: User,
+  isAdmin?: boolean; // Added isAdmin prop
 }
 
-export function AppSidebar({ ...props }: AppSidebarProps & React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ isAdmin = false, ...props }: AppSidebarProps & React.ComponentProps<typeof Sidebar>) {
   const { setTheme, theme } = useTheme()
   const pathname = usePathname()
-  
+
+  // Define base navigation items
+  const baseNavItems = [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: SquareTerminal,
+      isActive: pathname === "/dashboard" || pathname === "/",
+      items: [
+        {
+          title: "Inicio",
+          url: "/dashboard",
+          isActive: pathname === "/dashboard",
+        },
+      ],
+    },
+    // ... other non-admin items if any
+  ]
+
+  // Define admin-specific navigation items
+  const adminNavItems = [
+    {
+      title: "Dashboard",
+      url: "/admin",
+      icon: LayoutDashboard,
+      isActive: pathname === "/admin",
+    },
+    {
+      title: "Manage surveys",
+      url: "/admin/surveys",
+      icon: ClipboardList,
+      isActive: pathname?.startsWith("/admin/surveys"),
+    },
+    {
+      title: "Analytics",
+      url: "/admin/analytics",
+      icon: BarChart2,
+      isActive: pathname?.startsWith("/admin/analytics"),
+    },
+    {
+      title: "Manage users",
+      url: "/admin/users",
+      icon: Users,
+      isActive: pathname?.startsWith("/admin/users"),
+    },
+    {
+      title: "Organizations",
+      url: "/admin/organizations",
+      icon: Building,
+      isActive: pathname?.startsWith("/admin/organizations"),
+    },
+    {
+      title: "User Settings",
+      url: "/admin/settings",
+      icon: Settings,
+      isActive: pathname?.startsWith("/admin/settings"),
+    },
+  ]
+
+  // Combine items based on isAdmin prop
+  const navMainItems = isAdmin ? adminNavItems : baseNavItems
+
+
   // This is updated data with proper routes
   const data = {
     user: {
@@ -46,68 +113,7 @@ export function AppSidebar({ ...props }: AppSidebarProps & React.ComponentProps<
         logo: GalleryVerticalEnd,
       },
     ],
-    navMain: [
-      {
-        title: "Dashboard",
-        url: "/dashboard",
-        icon: SquareTerminal,
-        isActive: pathname === "/dashboard" || pathname === "/",
-        items: [
-          {
-            title: "Inicio",
-            url: "/dashboard",
-            isActive: pathname === "/dashboard",
-          },
-        ],
-      },
-      {
-        title: "Organizaciones",
-        url: "/organizations",
-        icon: Bot,
-        isActive: (pathname ?? "").startsWith("/organizations"),
-        items: [
-          {
-            title: "Todas las organizaciones",
-            url: "/organizations",
-            isActive: pathname === "/organizations",
-          },
-          {
-            title: "Editar",
-            url: "/organizations/[name]/edit",
-            isActive: (pathname ?? "").includes("/organizations/") && (pathname ?? "").endsWith("/edit"),
-          },
-          {
-            title: "Usuarios",
-            url: "/organizations/[name]/users",
-            isActive: (pathname ?? "").includes("/organizations/") && (pathname ?? "").includes("/users"),
-          },
-        ],
-      },
-      {
-        title: "Usuarios",
-        url: "/users",
-        icon: Users,
-        isActive: pathname?.startsWith("/users") ?? false,
-        items: [
-          {
-            title: "Todos los usuarios",
-            url: "/users",
-            isActive: pathname === "/users",
-          },
-          {
-            title: "Editar usuario",
-            url: "/users/[id]/edit",
-            isActive: (pathname ?? "").includes("/users/") && (pathname ?? "").endsWith("/edit"),
-          },
-        ],
-      },
-      {
-        title: "Configuración",
-        url: "/settings",
-        icon: Settings,
-        isActive: pathname?.startsWith("/settings") ?? false,
-      },
-    ],
+    navMain: navMainItems, // Use combined items
     organizations: [
       {
         name: "Alcaldia de Medellin",
@@ -124,7 +130,8 @@ export function AppSidebar({ ...props }: AppSidebarProps & React.ComponentProps<
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.organizations} />
+        {/* Conditionally render NavProjects or other sections if needed */}
+        {/* <NavProjects projects={data.organizations} /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={props.user} theme={theme} setTheme={setTheme} />

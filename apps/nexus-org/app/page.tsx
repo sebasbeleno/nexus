@@ -1,13 +1,9 @@
-import { FormMessage, Message } from "@/components/form-message";
-import { LoginForm } from "@/components/login-form";
-import { ThemeSwitcher } from "@/components/theme-switcher";
+import { Message } from "@/components/form-message";
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, BarChart2, ClipboardList, Map, Menu } from "lucide-react"
 
 export default async function Home(props: { searchParams: Promise<Message> }) {
-  const searchParams = await props.searchParams;
-
   return (
     <div className="min-h-screen bg-[#E8E8D3]/10">
       {/* Navigation */}
