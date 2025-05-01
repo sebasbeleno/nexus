@@ -87,6 +87,19 @@ export const updateSession = async (request: NextRequest) => {
     const role = userProfile?.role || "guest"; // Default to "guest" if role is not found
     console.log(`User role: ${role}`);
 
+    // Redirect authenticated users away from /login
+    if (pathname.startsWith("/login")) {
+      console.log(`Redirecting authenticated user ${user.id} from /login`);
+      if (role === "admin") {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      } else if (role === "analyst") {
+        return NextResponse.redirect(new URL("/analyst", request.url));
+      } else {
+        // Default redirect for other authenticated users (e.g., 'user', 'guest')
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+    }
+
     // Protect /admin route
     if (pathname.startsWith("/admin") && role !== "admin") {
       console.log(`Redirecting user ${user.id} from /admin due to insufficient role: ${role}`);

@@ -10,5 +10,6 @@ export const config = {
 		'/dashboard/:path*',
 		'/admin/:path*',
 		'/analyst/:path*',
+		'/login/:path*',
 	],
 }
