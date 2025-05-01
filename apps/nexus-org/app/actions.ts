@@ -40,6 +40,7 @@ export const signInAction = async (formData: FormData) => {
       await supabase.auth.signOut()
       return encodedRedirect("error", "/", "Access denied for this application.");
     case 'admin':
+      console.log("Redirecting admin user to /admin");
       return redirect("/admin");
     case 'analyst':
       return redirect("/analyst");

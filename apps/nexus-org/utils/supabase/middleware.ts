@@ -1,12 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
+import type { UserRole } from "../../../../packages/types/src/user";
 
 export const updateSession = async (request: NextRequest) => {
-  console.log("Middleware running...");
-  // This `try/catch` block is only here for the interactive tutorial.
-  // Feel free to remove once you have Supabase connected.
   try {
-    // Create an unmodified response
+    const pathname = request.nextUrl.pathname;
+    console.log("Request URL:", request.url);
+
     let response = NextResponse.next({
       request: {
         headers: request.headers,
@@ -17,6 +17,11 @@ export const updateSession = async (request: NextRequest) => {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
+        auth: {
+          storageKey: 'nexus-org.auth.token',
+          autoRefreshToken: true,
+          persistSession: true,
+        },
         cookies: {
           getAll() {
             return request.cookies.getAll();
@@ -36,24 +41,57 @@ export const updateSession = async (request: NextRequest) => {
       },
     );
 
-    // This will refresh session if expired - required for Server Components
-    // https://supabase.com/docs/guides/auth/server-side/nextjs
-    const user = await supabase.auth.getUser();
+    const {
+      data,
+      error,
+    } = await supabase.auth.getUser();
 
-    // protected routes
-    if (request.nextUrl.pathname.startsWith("/dashboard") && user.error) {
-      return NextResponse.redirect(new URL("/", request.url));
+    console.log("Supabase user data:", data);
+    const user = data.user;
+
+    // Handle unauthenticated users
+    if (error || !user) {
+      console.log("User not authenticated or error fetching user:", error?.message);
+      if (
+        pathname.startsWith("/dashboard") ||
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/analyst")
+      ) {
+        console.log("Redirecting unauthenticated user to /login");
+        await supabase.auth.signOut(); // Sign out the user if they are not authenticated
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+      // Allow access to public pages like /login or the root page if it's public
+      return response;
     }
 
-    if (request.nextUrl.pathname === "/" && !user.error) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+    // Handle authenticated users
+    console.log(`User ${user.id} authenticated.`);
+
+    // Role-based access control
+    // Ensure app_metadata exists and has the role property
+    const role = user.app_metadata?.role as UserRole | undefined;
+    console.log(`User role: ${role}`);
+
+    // Protect /admin route
+    if (pathname.startsWith("/admin") && role !== "admin") {
+      console.log(`Redirecting user ${user.id} from /admin due to insufficient role: ${role}`);
+      return NextResponse.redirect(new URL("/", request.url)); // Or a specific unauthorized page
     }
 
+    // Protect /analyst route
+    if (pathname.startsWith("/analyst") && role !== "analyst") {
+      console.log(`Redirecting user ${user.id} from /analyst due to insufficient role: ${role}`);
+      return NextResponse.redirect(new URL("/", request.url)); // Or a specific unauthorized page
+    }
+
+    // Allow access for authorized users or to other authenticated routes
+    console.log(`Allowing access for user ${user.id} to ${pathname}`);
     return response;
+
   } catch (e) {
-    // If you are here, a Supabase client could not be created!
-    // This is likely because you have not set up environment variables.
-    // Check out http://localhost:3000 for Next Steps.
+    console.error("Error in middleware:", e);
+    // Fallback to allow request processing if middleware fails unexpectedly
     return NextResponse.next({
       request: {
         headers: request.headers,

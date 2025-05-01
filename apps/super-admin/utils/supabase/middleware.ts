@@ -16,6 +16,11 @@ export const updateSession = async (request: NextRequest) => {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
+        auth: {
+          storageKey: 'nexus-super-admin.auth.token',
+          autoRefreshToken: true,
+          persistSession: true,
+        },
         cookies: {
           getAll() {
             return request.cookies.getAll();
