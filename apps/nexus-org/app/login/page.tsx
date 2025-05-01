@@ -1,6 +1,7 @@
 import { GalleryVerticalEnd } from "lucide-react"
 
 import { LoginForm } from "@/components/login-form"
+import { ThemeSwitcher } from "@/components/theme-switcher"
 
 export default function LoginPage() {
   return (
@@ -13,6 +14,10 @@ export default function LoginPage() {
           Acme Inc.
         </a>
         <LoginForm />
+      </div>
+      {/* Theme Switcher positioned at the bottom left */}
+      <div className="absolute bottom-6 left-6">
+        <ThemeSwitcher />
       </div>
     </div>
   )

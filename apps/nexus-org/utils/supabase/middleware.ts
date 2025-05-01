@@ -15,7 +15,7 @@ export const updateSession = async (request: NextRequest) => {
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // Use ANON_KEY for middleware
       {
         auth: {
           storageKey: 'nexus-org.auth.token',
@@ -42,108 +42,109 @@ export const updateSession = async (request: NextRequest) => {
     );
 
     const {
-      data,
-      error,
+      data: { user }, // Destructure user directly
+      error: authError, // Capture auth error
     } = await supabase.auth.getUser();
 
-    console.log("Supabase user data:", data);
-    const user = data.user;
+    console.log("Supabase user:", user ? user.id : 'No user');
 
     // Handle unauthenticated users
-    if (error || !user) {
-      console.log("User not authenticated or error fetching user:", error?.message);
+    if (authError || !user) {
+      console.log("User not authenticated or error fetching user:", authError?.message);
+      // Protect specific routes for unauthenticated users
       if (
         pathname.startsWith("/dashboard") ||
         pathname.startsWith("/admin") ||
-        pathname.startsWith("/analyst")
+        pathname.startsWith("/analyst") ||
+        pathname.startsWith("/reset-password") // Protect reset-password page too
       ) {
-        console.log("Redirecting unauthenticated user to /login");
-        await supabase.auth.signOut(); // Sign out the user if they are not authenticated
+        console.log("Redirecting unauthenticated user to /login from:", pathname);
+        // No need to sign out if already unauthenticated or error occurred
         return NextResponse.redirect(new URL("/login", request.url));
       }
-      // Allow access to public pages like /login or the root page if it's public
+      // Allow access to public pages like /login or the root page
       return response;
     }
 
     // Handle authenticated users
     console.log(`User ${user.id} authenticated.`);
 
+    // Fetch user profile including role and password_last_changed
     const { data: userProfile, error: userError } = await supabase
       .from('users')
-      .select('role')
+      .select('role, password_last_changed')
       .eq('id', user.id)
-      .single<{ role: UserRole }>() // Use the UserRole type
-
+      .single<{ role: UserRole; password_last_changed: string | null }>(); // Type the profile data
 
     if (userError) {
-      console.error("Error fetching user profile:", userError.message);
-      await supabase.auth.signOut(); // Sign out the user if there's an error fetching their profile
-      // Handle error fetching user profile
-      return NextResponse.redirect(new URL("/login", request.url));
+      console.error(`Error fetching user profile for ${user.id}:`, userError.message);
+      await supabase.auth.signOut(); // Sign out if profile fetch fails
+      return NextResponse.redirect(new URL("/login?error=profile_fetch_failed", request.url));
     }
 
-    // Role-based access control
-    // Ensure app_metadata exists and has the role property
-    const role = userProfile?.role || "guest"; // Default to "guest" if role is not found
-    console.log(`User role: ${role}`);
-
-    // Redirect authenticated users away from /login
-    if (pathname.startsWith("/login")) {
-      console.log(`Redirecting authenticated user ${user.id} from /login`);
-      if (role === "admin") {
-        return NextResponse.redirect(new URL("/admin", request.url));
-      } else if (role === "analyst") {
-        return NextResponse.redirect(new URL("/analyst", request.url));
-      } else {
-        // Default redirect for other authenticated users (e.g., 'user', 'guest')
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
+    if (!userProfile) {
+        console.error(`User profile not found for authenticated user: ${user.id}`);
+        await supabase.auth.signOut(); // Sign out if profile doesn't exist
+        return NextResponse.redirect(new URL("/login?error=profile_not_found", request.url));
     }
 
-    // Protect /admin route
-    if (pathname.startsWith("/admin") && role !== "admin") {
-      console.log(`Redirecting user ${user.id} from /admin due to insufficient role: ${role}`);
-      return NextResponse.rewrite(new URL('/404', request.url));
+    const role = userProfile.role || "guest"; // Default role
+    const needsPasswordReset = userProfile.password_last_changed === null;
+
+    console.log(`User ${user.id}: Role=${role}, NeedsPasswordReset=${needsPasswordReset}`);
+
+    // --- Password Reset Logic ---
+    // If password reset is needed and user is NOT on the reset page or auth callback, redirect them.
+    if (needsPasswordReset && pathname !== '/reset-password' && !pathname.startsWith('/auth/callback')) {
+        console.log(`Redirecting user ${user.id} to /reset-password (needs reset)`);
+        return NextResponse.redirect(new URL('/reset-password', request.url));
     }
 
-    // Protect /analyst route
-    if (pathname.startsWith("/analyst") && role !== "analyst") {
-      console.log(`Redirecting user ${user.id} from /analyst due to insufficient role: ${role}`);
-      return NextResponse.rewrite(new URL('/404', request.url));
+    // --- Protect /reset-password Page ---
+    // If user is on reset page but DOES NOT need a reset, redirect them away.
+    if (pathname === '/reset-password' && !needsPasswordReset) {
+        console.log(`Redirecting user ${user.id} away from /reset-password (not needed)`);
+        let redirectUrl = '/dashboard'; // Default redirect
+        if (role === "admin") redirectUrl = "/admin";
+        else if (role === "analyst") redirectUrl = "/analyst";
+        return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
 
-    // Allow access for authorized users or to other authenticated routes
+    // --- Login Page Redirect for Authenticated Users ---
+    // Redirect authenticated users away from /login, *unless* they need a password reset.
+    if (pathname.startsWith("/login") && !needsPasswordReset) {
+      console.log(`Redirecting authenticated user ${user.id} from /login (already logged in)`);
+      let redirectUrl = '/dashboard'; // Default redirect
+      if (role === "admin") redirectUrl = "/admin";
+      else if (role === "analyst") redirectUrl = "/analyst";
+      return NextResponse.redirect(new URL(redirectUrl, request.url));
+    }
+
+    // --- Role-Based Access Control (Only if password reset is NOT needed) ---
+    if (!needsPasswordReset) {
+        // Protect /admin route
+        if (pathname.startsWith("/admin") && role !== "admin") {
+          console.log(`Access denied for user ${user.id} to /admin (Role: ${role})`);
+          return NextResponse.rewrite(new URL('/404', request.url)); // Show 404 for unauthorized access
+        }
+
+        // Protect /analyst route
+        if (pathname.startsWith("/analyst") && role !== "analyst") {
+          console.log(`Access denied for user ${user.id} to /analyst (Role: ${role})`);
+          return NextResponse.rewrite(new URL('/404', request.url)); // Show 404
+        }
+    }
+
+    // Allow access if none of the above conditions triggered a redirect/rewrite
     console.log(`Allowing access for user ${user.id} to ${pathname}`);
     return response;
 
   } catch (e) {
-    console.error("Error in middleware:", e);
-    // Fallback to allow request processing if middleware fails unexpectedly
-    return NextResponse.next({
-      request: {
-        headers: request.headers,
-      },
-    });
+    console.error("Critical error in middleware:", e);
+    // Fallback: Allow request processing to avoid blocking the site entirely
+    // Consider redirecting to a generic error page in production
+    return NextResponse.next();
   }
 };
 
-export const createClient = (request: NextRequest) => {
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-        },
-      },
-    },
-  );
-
-  return { supabase, response: NextResponse.next() };
-};
+// Removed the duplicate/unused createClient function definition
