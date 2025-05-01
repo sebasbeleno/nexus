@@ -7,6 +7,7 @@ import { Input } from '@workspace/ui/components/input' // Adjust path as needed
 import { Label } from '@workspace/ui/components/label' // Adjust path as needed
 import { FormMessage } from '@/components/form-message'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@workspace/ui/components/card'
+import { PasswordStrengthIndicator } from '@/components/password-strength-indicator' // Import the new component
 
 export default function ResetPasswordPage() {
 	const [password, setPassword] = useState('')
@@ -25,11 +26,23 @@ export default function ResetPasswordPage() {
 			return
 		}
 
-		if (password.length < 6) {
-			// Add more robust password validation as needed
-			setError('Password must be at least 6 characters long.')
+		// Updated password validation based on rules (minimum length 8)
+		if (password.length < 8) {
+			setError('Password must be at least 8 characters long.')
 			return
 		}
+
+		// Optional: Add checks for other rules if you want to enforce them strictly on submit
+		// const rules = [
+		// 	/[A-Z]/, // Uppercase
+		// 	/[a-z]/, // Lowercase
+		// 	/[0-9]/, // Number
+		// 	/[!@#$%^&*]/ // Special character
+		// ];
+		// if (!rules.every(regex => regex.test(password))) {
+		// 	setError('Password does not meet all security requirements.');
+		// 	return;
+		// }
 
 		setIsLoading(true)
 
@@ -74,6 +87,8 @@ export default function ResetPasswordPage() {
 								disabled={isLoading}
 								className="mt-1"
 							/>
+							{/* Add the password strength indicator below the input */}
+							<PasswordStrengthIndicator password={password} />
 						</div>
 						<div>
 							<Label htmlFor="confirmPassword">Confirm New Password</Label>
