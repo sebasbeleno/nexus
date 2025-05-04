@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@workspace/ui/components/button";
 import { Project } from "@workspace/types";
 import { Loader2, AlertCircle, Info, MoreHorizontal } from "lucide-react";
@@ -31,6 +32,7 @@ const statusVariantMap: Record<string, string> = {
 } as const;
 
 export default function ProjectsPage() {
+  const router = useRouter();
   const { projects, isLoading, error, refetch } = useFetchProjects();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
@@ -123,7 +125,9 @@ export default function ProjectsPage() {
                         Copiar ID del Proyecto
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>Ver detalles</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => router.push(`/projects/${project.id}`)}>
+                        Ver detalles
+                      </DropdownMenuItem>
                       <DropdownMenuItem>Editar</DropdownMenuItem>
                       <DropdownMenuItem>Archivar</DropdownMenuItem>
                     </DropdownMenuContent>
