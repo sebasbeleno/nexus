@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@workspace/ui/components/button";
 import { DataTable } from "@/components/data-table"; // Adjust path if necessary
 import { Project } from "@workspace/types"; // Import the Project type
@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { useFetchProjects } from "@/hooks/use-fetch-projects"; // Import the hook
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"; // Import Alert components
+import { CreateProjectDialog } from "@/components/create-project-dialog";
 
 // Define columns for the DataTable (keep this definition)
 export const columns: ColumnDef<Project>[] = [
@@ -85,15 +86,22 @@ export const columns: ColumnDef<Project>[] = [
 
 export default function ProjectsPage() {
   const { projects, isLoading, error, refetch } = useFetchProjects();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Proyectos</h1>
-        <Link href="/projects/create" passHref>
-          <Button>Crear Proyecto</Button>
-        </Link>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          Crear Proyecto
+        </Button>
       </div>
+
+      <CreateProjectDialog
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onSuccess={refetch}
+      />
 
       {isLoading && (
         <div className="flex items-center justify-center py-10">
