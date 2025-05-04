@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { Project } from "@workspace/types";
-import { createClient } from "@/utils/supabase/client"; // Adjust path if necessary
+import { createClient } from "@/utils/supabase/client";
 
 interface UseFetchProjectsResult {
-  projects: Project[];
+  projects: (Project & { organization?: { name: string } })[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
 }
 
 export function useFetchProjects(): UseFetchProjectsResult {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<(Project & { organization?: { name: string } })[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const supabase = createClient();
@@ -21,13 +21,17 @@ export function useFetchProjects(): UseFetchProjectsResult {
     try {
       const { data, error: fetchError } = await supabase
         .from("projects")
-        .select("*"); // Select all columns for now
+        .select(`
+          *,
+          organization:organization_id (
+            name
+          )
+        `);
 
       if (fetchError) {
         throw fetchError;
       }
 
-      // TODO: Add Zod validation here if needed
       setProjects(data || []);
     } catch (err) {
       console.error("Error fetching projects:", err);
@@ -39,8 +43,7 @@ export function useFetchProjects(): UseFetchProjectsResult {
 
   useEffect(() => {
     fetchProjects();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Fetch on initial mount
+  }, []);
 
   return { projects, isLoading, error, refetch: fetchProjects };
 }

@@ -2,10 +2,8 @@
 
 import React, { useState } from "react";
 import { Button } from "@workspace/ui/components/button";
-import { DataTable } from "@/components/data-table"; // Adjust path if necessary
-import { Project } from "@workspace/types"; // Import the Project type
-import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal, Loader2, AlertCircle, Info } from "lucide-react"; // Import icons
+import { Project } from "@workspace/types";
+import { Loader2, AlertCircle, Info, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,79 +12,38 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
-import Link from "next/link";
-import { useFetchProjects } from "@/hooks/use-fetch-projects"; // Import the hook
-import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert"; // Import Alert components
+import { useFetchProjects } from "@/hooks/use-fetch-projects";
+import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
 import { CreateProjectDialog } from "@/components/create-project-dialog";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@workspace/ui/components/card";
+import { cn } from "@workspace/ui/lib/utils";
 
-// Define columns for the DataTable (keep this definition)
-export const columns: ColumnDef<Project>[] = [
-  {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Nombre
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-  },
-  {
-    accessorKey: "organization_id", // Consider fetching and displaying organization name
-    header: "Organización ID",
-  },
-  {
-    accessorKey: "status",
-    header: "Estado",
-  },
-  {
-    accessorKey: "created_at",
-    header: "Creado",
-    cell: ({ row }) => {
-      const date = new Date(row.getValue("created_at"));
-      // Format date more robustly, handle potential invalid dates
-      return <span>{isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString()}</span>;
-    },
-  },
-  {
-    id: "actions",
-    cell: ({ row }) => {
-      const project = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menú</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(project.id)}
-            >
-              Copiar ID del Proyecto
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {/* Add links/actions for Edit, View Details, Archive later */}
-            <DropdownMenuItem>Ver detalles</DropdownMenuItem>
-            <DropdownMenuItem>Editar</DropdownMenuItem>
-            <DropdownMenuItem>Archivar</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
-];
+const statusVariantMap: Record<string, string> = {
+  active: "border-green-500/50 bg-green-50/50 dark:bg-green-950/50",
+  completed: "border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/50",
+  archived: "border-gray-200 bg-gray-50/50 dark:bg-gray-800/50",
+} as const;
 
 export default function ProjectsPage() {
   const { projects, isLoading, error, refetch } = useFetchProjects();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) 
+      ? 'Invalid Date' 
+      : date.toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+  };
 
   return (
     <div className="container mx-auto py-10">
@@ -134,7 +91,60 @@ export default function ProjectsPage() {
       )}
 
       {!isLoading && !error && projects.length > 0 && (
-        <DataTable columns={columns} data={projects} />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((project) => (
+            <Card 
+              key={project.id} 
+              className={cn(
+                "relative",
+                statusVariantMap[project.status.toLowerCase()] || statusVariantMap.archived
+              )}
+            >
+              <CardHeader className="grid gap-2">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1">
+                    <CardTitle>{project.name}</CardTitle>
+                    <CardDescription>
+                      {project.organization?.name ?? `ID: ${project.organization_id}`}
+                    </CardDescription>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menú</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
+                      <DropdownMenuItem
+                        onClick={() => navigator.clipboard.writeText(project.id)}
+                      >
+                        Copiar ID del Proyecto
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem>Ver detalles</DropdownMenuItem>
+                      <DropdownMenuItem>Editar</DropdownMenuItem>
+                      <DropdownMenuItem>Archivar</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Estado:</span>
+                    <span className="font-medium">{project.status}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Creado:</span>
+                    <span>{formatDate(project.created_at)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );
