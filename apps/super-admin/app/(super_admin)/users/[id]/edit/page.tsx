@@ -27,7 +27,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('users')
+          .from('profiles')
           .select(`
             *,
             organizations (
@@ -69,7 +69,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     
     try {
       const { error } = await supabase
-        .from('users')
+        .from('profiles')
         .update({
           first_name: user.first_name,
           last_name: user.last_name,

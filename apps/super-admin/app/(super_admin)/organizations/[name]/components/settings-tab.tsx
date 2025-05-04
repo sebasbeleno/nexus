@@ -31,7 +31,7 @@ export const SettingsTab = ({ organization }: { organization: any }) => {
       
       // First, get all users of this organization
       const { data: users, error: usersError } = await supabase
-        .from('users')
+        .from('profiles')
         .select('id')
         .eq('organization_id', organization.id);
       
@@ -46,7 +46,7 @@ export const SettingsTab = ({ organization }: { organization: any }) => {
         
         // Delete all users of this organization
         const { error: deleteUsersError } = await supabase
-          .from('users')
+          .from('profiles')
           .delete()
           .in('id', userIds);
         
@@ -54,7 +54,6 @@ export const SettingsTab = ({ organization }: { organization: any }) => {
           throw deleteUsersError;
         }
         
-        console.log(`Deleted ${users.length} users from organization`);
       }
       
       // Now delete the organization itself

@@ -39,7 +39,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ userId, userData, handleInput
       
       // Update user status in the database
       const { error } = await supabase
-        .from('users')
+        .from('profiles')
         .update({ is_active: newActiveStatus })
         .eq('id', userId);
 

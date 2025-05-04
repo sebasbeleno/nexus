@@ -30,7 +30,7 @@ async function getStats(supabase: SupabaseClient<any, "public", any>) {
 
   // Get total count of active users with organizations
   const { count: activeUsersCount, error: usersError } = await supabase
-    .from('users')
+    .from('profiles')
     .select('*', { count: 'exact', head: true })
     .eq('is_active', true)
     .not('organization_id', 'is', null); // Only users with an assigned organization
@@ -65,8 +65,6 @@ async function getLogs(supabase: SupabaseClient<any, "public", any>): Promise<Lo
     console.error('Error fetching logs:', error);
     return [];
   }
-
-  console.log("data", data);
 
   // Transform the data to match the Log type
   return data.map((log: any) => ({

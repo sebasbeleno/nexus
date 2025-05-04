@@ -55,7 +55,6 @@ export function NavUser({
   const currentTheme = theme || themeContext.theme
   const changeTheme = setTheme || themeContext.setTheme
   
-  console.log(user)
   return (
     <SidebarMenu>
       <SidebarMenuItem>

@@ -97,7 +97,7 @@ export default function EditOrganizationPage({ params }: { params: { name: strin
     try {
       // First, delete all users associated with this organization
       const { error: usersError } = await supabase
-        .from('users')
+        .from('profiles')
         .delete()
         .eq('organization_id', organization.id);
         

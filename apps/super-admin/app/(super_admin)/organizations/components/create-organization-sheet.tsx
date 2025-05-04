@@ -108,6 +108,7 @@ export function CreateOrganizationSheet() {
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: adminData.email,
         password: adminData.password,
+        email_confirm: true,
         user_metadata: {
           organization_id: orgData.id,
           first_name: firstName,

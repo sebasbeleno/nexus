@@ -27,7 +27,7 @@ export default async function UserDetailsPage({
 
   // Fetch user details
   const { data: userData, error } = await supabase
-    .from('users')
+    .from('profiles')
     .select(`
       *,
       organizations(name)

@@ -43,7 +43,7 @@ export async function checkSuperAdminAccess() {
   }
 
   const { data: userData, error } = await supabase
-    .from('users')
+    .from('profiles')
     .select('role')
     .eq('id', session.user.id)
     .single()

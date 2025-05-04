@@ -21,7 +21,7 @@ export const signInAction = async (formData: FormData) => {
 
   // Check if user has super_admin role
   const { data: userData, error: userError } = await supabase
-    .from('users')
+    .from('profiles')
     .select('role')
     .eq('id', data.user.id)
     .single()

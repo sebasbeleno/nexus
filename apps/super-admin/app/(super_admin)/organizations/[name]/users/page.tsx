@@ -37,7 +37,7 @@ async function getOrganizationUsers(
 	organizationId: string
 ): Promise<User[]> {
 	const { data, error } = await supabase
-		.from('users')
+		.from('profiles')
 		.select('*')
 		.eq('organization_id', organizationId);
 

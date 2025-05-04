@@ -11,9 +11,9 @@ async function getData(supabase: SupabaseClient<any, "public", any>): Promise<Or
     .from('organizations')
     .select(`
       *,
-      active_users:users(count)
+      active_users:profiles(count)
     `)
-    .eq('users.is_active', true)  // Only count active users
+    .eq('profiles.is_active', true)  // Only count active users
     .throwOnError();
 
   if (error) {

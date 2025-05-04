@@ -30,7 +30,7 @@ export default async function OrganizationDetailsPage({
       .from('organizations')
       .select(`
         *,
-        active_users:users(count)
+        active_users:profiles(count)
       `)
       .eq('name', organizationName)
       .single();

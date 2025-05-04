@@ -17,12 +17,12 @@ export const signInAction = async (formData: FormData) => {
   });
 
   if (error) {
-    return encodedRedirect("error", "/", error.message);
+    return encodedRedirect("error", "/login", error.message);
   }
 
   // Check user role
   const { data: userData, error: userError } = await supabase
-    .from("users")
+    .from("profiles")
     .select("role")
     .eq("id", data.user.id)
     .single<{ role: UserRole }>(); // Use the UserRole type
@@ -30,7 +30,7 @@ export const signInAction = async (formData: FormData) => {
   if (userError || !userData) {
     // Sign out the user if role check fails
     await supabase.auth.signOut();
-    return encodedRedirect("error", "/", "Could not retrieve user role.");
+    return encodedRedirect("error", "/login", "Could not retrieve user role.");
   }
 
   // Redirect based on role
@@ -38,7 +38,7 @@ export const signInAction = async (formData: FormData) => {
     // super_admin should likely use a different app/login, deny access here
     case "super_admin":
       await supabase.auth.signOut();
-      return encodedRedirect("error", "/", "Access denied for this application.");
+      return encodedRedirect("error", "/login", "Access denied for this application.");
     case "admin":
       console.log("Redirecting admin user to /admin");
       return redirect("/admin");
@@ -47,14 +47,14 @@ export const signInAction = async (formData: FormData) => {
     default:
       // Sign out users with other roles (e.g., 'surveyor') or if role is unexpected
       await supabase.auth.signOut();
-      return encodedRedirect("error", "/", "Access denied for this application.");
+      return encodedRedirect("error", "/login", "Access denied for this application.");
   }
 };
 
 export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  return redirect("/");
+  return redirect("/login");
 };
 
 export async function updatePassword(newPassword: string): Promise<{ error?: string } | void> { // Return type can be void on redirect
@@ -81,7 +81,7 @@ export async function updatePassword(newPassword: string): Promise<{ error?: str
 
   // 2. Update the password_last_changed field in the users table to prevent reset loop
   const { error: updateProfileError } = await supabase
-    .from('users')
+    .from('profiles')
     .update({ password_last_changed: new Date().toISOString() }) // Set to current time
     .eq('id', user.id)
 
@@ -94,7 +94,7 @@ export async function updatePassword(newPassword: string): Promise<{ error?: str
 
   // 3. Fetch the user's role again to ensure correct redirection post-update.
   const { data: userProfile, error: profileError } = await supabase
-    .from('users')
+    .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single<{ role: UserRole }>()

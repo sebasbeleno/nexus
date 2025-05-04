@@ -26,7 +26,7 @@ export function useFetchUsers() {
         const supabase = createClient()
         
         const { data, error } = await supabase
-          .from('users')
+          .from('profiles')
           .select('*')
           .order('created_at', { ascending: false })
         

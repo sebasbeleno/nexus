@@ -34,8 +34,6 @@ export const columns: ColumnDef<Organization>[] = [
         cell: ({ row }) => {
             const name = row.getValue("name") as string
 
-            console.log(row)  
-
             return (
                 <Link href={`/organizations/${encodeURIComponent(name)}`} className="hover:underline text-primary font-medium">
                     {name}
