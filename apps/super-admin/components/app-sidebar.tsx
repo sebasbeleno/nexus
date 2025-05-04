@@ -8,6 +8,7 @@ import {
   SquareTerminal,
   Users,
   Settings,
+  FolderKanban, // Import FolderKanban icon
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
@@ -98,6 +99,24 @@ export function AppSidebar({ ...props }: AppSidebarProps & React.ComponentProps<
             title: "Editar usuario",
             url: "/users/[id]/edit",
             isActive: (pathname ?? "").includes("/users/") && (pathname ?? "").endsWith("/edit"),
+          },
+        ],
+      },
+      {
+        title: "Proyectos", // Add Projects section
+        url: "/projects",
+        icon: FolderKanban, // Use FolderKanban icon
+        isActive: pathname?.startsWith("/projects") ?? false,
+        items: [
+          {
+            title: "Todos los proyectos",
+            url: "/projects",
+            isActive: pathname === "/projects",
+          },
+          {
+            title: "Crear proyecto",
+            url: "/projects/create", // Add create project route
+            isActive: pathname === "/projects/create",
           },
         ],
       },
