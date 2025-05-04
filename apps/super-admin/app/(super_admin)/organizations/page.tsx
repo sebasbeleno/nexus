@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { columns, Organization } from "./columns";
 import { DataTable } from "../../../components/data-table";
-import { CreateOrganizationSheet } from "./components/create-organization-sheet";
+import { CreateOrganizationDialog } from "./components/create-organization-dialog";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { SearchInput } from "./components/search-input";
 
@@ -59,7 +59,7 @@ export default async function Dashboard({ searchParams }: { searchParams?: { sea
         
         <div className="flex justify-between items-center">
           <SearchInput placeholder="Buscar organización..." />
-          <CreateOrganizationSheet />
+          <CreateOrganizationDialog />
         </div>
       </div>
       <DataTable columns={columns} data={data} />
