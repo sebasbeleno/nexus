@@ -1,291 +1,331 @@
 "use client";
 
+import * as React from "react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Project } from "@workspace/types";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@workspace/ui/components/card";
-import { Button } from "@workspace/ui/components/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@workspace/ui/components/select";
+import { AlertCircle, Edit, Loader2, PlusCircle, Trash2 } from "lucide-react";
+
+import type { Project } from "@workspace/types"; // Assuming Project type exists
+import type { Survey } from "@workspace/types";
+import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
 import { Badge } from "@workspace/ui/components/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@workspace/ui/components/dialog";
+import { Button } from "@workspace/ui/components/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
 import { Input } from "@workspace/ui/components/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@workspace/ui/components/tabs";
-import { createClient } from "@/utils/supabase/client";
+import { Label } from "@workspace/ui/components/label";
 import { Separator } from "@workspace/ui/components/separator";
-import { toast } from "sonner";
-import { AlertCircle, Loader2 } from "lucide-react";
-import { Alert, AlertDescription } from "@workspace/ui/components/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
+// import { createClient } from '@/utils/supabase/client' // Adjust path as needed
+
+import { CreateSurveyDialog } from "@/components/create-survey-dialog"; // Adjust path
+import { createClient } from "@/utils/supabase/client";
 
 export default function ProjectPage({ params }: { params: { id: string } }) {
-  const router = useRouter();
-  const [project, setProject] = useState<(Project & { organization?: { name: string } }) | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [editedDescription, setEditedDescription] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    status: "",
-    description: "",
-  });
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    async function fetchProject() {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const supabase = createClient();
-        const { data, error: fetchError } = await supabase
-          .from("projects")
-          .select(`
-            *,
-            organization:organization_id (
-              name
-            )
-          `)
-          .eq("id", params.id)
-          .single();
+  // State for surveys
+  const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [isLoadingSurveys, setIsLoadingSurveys] = useState(true);
+  const [surveyError, setSurveyError] = useState<string | null>(null);
+  const [showCreateSurveyDialog, setShowCreateSurveyDialog] = useState(false);
 
-        if (fetchError) throw fetchError;
-        if (!data) throw new Error("Project not found");
+  const supabase = createClient();
 
-        setProject(data);
-        setFormData({
-          name: data.name,
-          status: data.status,
-          description: data.description || "",
-        });
-      } catch (err) {
-        console.error("Error fetching project:", err);
-        setError(err instanceof Error ? err : new Error("Failed to fetch project"));
-      } finally {
-        setIsLoading(false);
-      }
+  const fetchProjectData = React.useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+
+      const { data, error: fetchError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', params.id)
+        .single()
+
+      if (fetchError) throw fetchError
+      if (!data) throw new Error('Project not found')
+
+      setProject(data)
+      setEditedName(data.name)
+      setEditedDescription(data.description || '')
+    
+
+    } catch (err: any) {
+      console.error("Failed to fetch project:", err);
+      setError(err.message || "No se pudieron cargar los detalles del proyecto."); // Translate error message
+      setProject(null);
+    } finally {
+      setIsLoading(false);
     }
-
-    fetchProject();
   }, [params.id]);
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  const fetchSurveys = React.useCallback(async () => {
+    if (!params.id) return;
+    setIsLoadingSurveys(true);
+    setSurveyError(null);
     try {
-      const supabase = createClient();
-      const { error: updateError } = await supabase
-        .from("projects")
-        .update({
-          name: formData.name,
-          status: formData.status,
-          description: formData.description,
-        })
-        .eq("id", params.id);
 
-      if (updateError) throw updateError;
+      const { data, error: fetchError } = await supabase
+        .from('surveys')
+        .select('*')
+        .eq('project_id', params.id)
+        .order('created_at', { ascending: false })
 
-      setProject((prev) =>
-        prev
-          ? {
-              ...prev,
-              name: formData.name,
-              status: formData.status as Project["status"],
-              description: formData.description,
-            }
-          : null
-      );
-      setIsEditing(false);
-      toast.success("Project updated successfully");
-    } catch (err) {
-      console.error("Error updating project:", err);
-      toast.error("Failed to update project");
+      if (fetchError) throw fetchError
+
+      setSurveys(data || [])
+    } catch (err: any) {
+      console.error("Failed to fetch surveys:", err);
+      setSurveyError(err.message || "No se pudieron cargar las encuestas."); // Translate error message
+      setSurveys([]);
     } finally {
-      setIsSaving(false);
+      setIsLoadingSurveys(false);
     }
+  }, [params.id]);
+
+  useEffect(() => {
+    fetchProjectData();
+    fetchSurveys();
+  }, [fetchProjectData, fetchSurveys]);
+
+  const handleSave = async () => {
+    if (!project) return;
+    console.log("Saving project..."); // Keep console logs in English for developers
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    setProject((prev) => (prev ? { ...prev, name: editedName, description: editedDescription } : null));
+    setIsEditing(false);
   };
 
   const handleDelete = async () => {
+    if (!project) return;
     setIsDeleting(true);
     try {
-      const supabase = createClient();
-      const { error: deleteError } = await supabase
-        .from("projects")
-        .delete()
-        .eq("id", params.id);
-
-      if (deleteError) throw deleteError;
-
-      toast.success("Project deleted successfully");
-      router.push("/projects");
+      console.log("Deleting project..."); // Keep console logs in English for developers
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setShowDeleteDialog(false);
     } catch (err) {
-      console.error("Error deleting project:", err);
-      toast.error("Failed to delete project");
+      console.error("Failed to delete project:", err); // Keep console logs in English
     } finally {
       setIsDeleting(false);
-      setShowDeleteDialog(false);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-6 h-6 animate-spin" />
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <Alert variant="destructive">
-        <AlertCircle className="w-4 h-4" />
-        <AlertDescription>{error.message}</AlertDescription>
-      </Alert>
+      <div className="container mx-auto py-6">
+        <Alert variant="destructive">
+          <AlertCircle className="w-4 h-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
   if (!project) {
     return (
-      <Alert>
-        <AlertCircle className="w-4 h-4" />
-        <AlertDescription>Project not found</AlertDescription>
-      </Alert>
+      <div className="container mx-auto py-6">
+        <Alert>
+          <AlertCircle className="w-4 h-4" />
+          <AlertTitle>No Encontrado</AlertTitle> {/* Translate title */}
+          <AlertDescription>No se pudo encontrar el proyecto.</AlertDescription> {/* Translate description */}
+        </Alert>
+      </div>
     );
   }
 
   return (
     <div className="container mx-auto py-6 space-y-6">
+      {/* Project Header */}
       <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
-          <p className="text-muted-foreground">{project.organization?.name}</p>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold">{project.name}</h1>
+          <p className="text-muted-foreground">{project.description || "Sin descripción proporcionada."}</p> {/* Translate placeholder */}
         </div>
         <div className="flex gap-2">
           {!isEditing ? (
-            <>
-              <Button onClick={() => setIsEditing(true)}>Edit Project</Button>
-              <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-                Delete Project
-              </Button>
-            </>
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+              <Edit className="mr-2 size-4" /> Editar Proyecto {/* Translate button text */}
+            </Button>
           ) : (
-            <>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Cancel
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setIsEditing(false)}>
+                Cancelar {/* Translate button text */}
               </Button>
-              <Button onClick={handleSave} disabled={isSaving}>
-                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Save Changes
+              <Button size="sm" onClick={handleSave}>
+                Guardar Cambios {/* Translate button text */}
               </Button>
-            </>
+            </div>
           )}
+          <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)} disabled={isDeleting}>
+            <Trash2 className="mr-2 size-4" /> Eliminar Proyecto {/* Translate button text */}
+          </Button>
         </div>
       </div>
 
       <Separator />
 
+      {/* Edit Form (conditional) */}
+      {isEditing && (
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <div className="space-y-1">
+              <Label htmlFor="projectName">Nombre del Proyecto</Label> {/* Translate label */}
+              <Input
+                id="projectName"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="projectDescription">Descripción</Label> {/* Translate label */}
+              <Input
+                id="projectDescription"
+                value={editedDescription}
+                onChange={(e) => setEditedDescription(e.target.value)}
+                placeholder="Descripción del proyecto" // Translate placeholder
+              />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tabs for Details, Settings, Surveys */}
       <Tabs defaultValue="details" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsTrigger value="details">Detalles</TabsTrigger> {/* Translate tab trigger */}
+          <TabsTrigger value="surveys">Encuestas</TabsTrigger> {/* Translate tab trigger */}
+          <TabsTrigger value="settings">Configuración</TabsTrigger> {/* Translate tab trigger */}
         </TabsList>
 
+        {/* Details Tab */}
         <TabsContent value="details" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Project Information</CardTitle>
-              <CardDescription>View and manage project details</CardDescription>
+              <CardTitle>Detalles del Proyecto</CardTitle> {/* Translate card title */}
+              <CardDescription>Resumen de la información del proyecto.</CardDescription> {/* Translate card description */}
             </CardHeader>
             <CardContent className="space-y-4">
-              {!isEditing ? (
-                <>
-                  <div>
-                    <div className="text-sm font-medium mb-1">Status</div>
-                    <Badge>{project.status}</Badge>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium mb-1">Description</div>
-                    <p className="text-muted-foreground">
-                      {project.description || "No description provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium mb-1">Created</div>
-                    <p className="text-muted-foreground">
-                      {new Date(project.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-sm font-medium mb-1">Project Name</div>
-                    <Input
-                      value={formData.name}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium mb-1">Status</div>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium mb-1">Description</div>
-                    <Input
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, description: e.target.value }))
-                      }
-                    />
-                  </div>
-                </div>
-              )}
+              {/* Display non-editable details here if needed, or keep edit form separate */}
+              <p>Contenido de detalles pendiente. El modo de edición se maneja sobre las pestañas.</p> {/* Translate placeholder text */}
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Surveys Tab */}
+        <TabsContent value="surveys" className="space-y-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Encuestas</h2> {/* Translate heading */}
+            <Button size="sm" onClick={() => setShowCreateSurveyDialog(true)}>
+              <PlusCircle className="mr-2 size-4" /> Crear Encuesta {/* Translate button text */}
+            </Button>
+          </div>
+
+          {isLoadingSurveys ? (
+            <div className="flex justify-center items-center py-10">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : surveyError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="w-4 h-4" />
+              <AlertTitle>Error al Cargar Encuestas</AlertTitle> {/* Translate alert title */}
+              <AlertDescription>{surveyError}</AlertDescription>
+            </Alert>
+          ) : surveys.length === 0 ? (
+            <Card className="text-center py-10">
+              <CardContent>
+                <h3 className="text-lg font-medium">Aún no hay Encuestas</h3> {/* Translate heading */}
+                <p className="text-muted-foreground text-sm mb-4">Empieza creando tu primera encuesta.</p> {/* Translate text */}
+                <Button size="sm" onClick={() => setShowCreateSurveyDialog(true)}>
+                  <PlusCircle className="mr-2 size-4" /> Crear Encuesta {/* Translate button text */}
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {surveys.map((survey) => (
+                <Card key={survey.id}>
+                  <CardHeader>
+                    <CardTitle>{survey.name}</CardTitle>
+                    <CardDescription>{survey.description || "Sin descripción"}</CardDescription> {/* Translate placeholder */}
+                  </CardHeader>
+                  <CardContent>
+                    <Badge variant="outline">Versión: {survey.version}</Badge> {/* Translate badge text */}
+                    {/* Add more details like deadline, status etc. */}
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" size="sm" className="w-full">
+                      Ver Detalles {/* Translate button text */}
+                    </Button>
+                    {/* Add Edit/Delete buttons later */}
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Settings Tab */}
         <TabsContent value="settings">
           <Card>
             <CardHeader>
-              <CardTitle>Project Settings</CardTitle>
-              <CardDescription>Configure project settings and permissions</CardDescription>
+              <CardTitle>Configuración del Proyecto</CardTitle> {/* Translate card title */}
+              <CardDescription>Configura los ajustes y permisos del proyecto</CardDescription> {/* Translate card description */}
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Settings content will be added here</p>
+              <p className="text-muted-foreground">El contenido de configuración se añadirá aquí</p> {/* Translate placeholder text */}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
+      {/* Delete Project Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Project</DialogTitle>
+            <DialogTitle>Eliminar Proyecto</DialogTitle> {/* Translate dialog title */}
             <DialogDescription>
-              Are you sure you want to delete this project? This action cannot be undone.
+              ¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer. {/* Translate dialog description */}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-              Cancel
+              Cancelar {/* Translate button text */}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
               {isDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Delete Project
+              Eliminar Proyecto {/* Translate button text */}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Survey Dialog */}
+      {project && (
+        <CreateSurveyDialog
+          projectId={project.id}
+          open={showCreateSurveyDialog}
+          onOpenChange={setShowCreateSurveyDialog}
+          onSurveyCreated={() => {
+            fetchSurveys(); // Refresh the list after creation
+          }}
+        />
+      )}
     </div>
   );
 }

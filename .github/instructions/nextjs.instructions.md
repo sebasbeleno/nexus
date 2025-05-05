@@ -85,6 +85,7 @@ Project Structure and Environment
 - Use `dotenv` for environment variable management.
 - Follow patterns for environment-specific configurations in `eas.json` and `next.config.js`.
 - Utilize custom generators in `turbo/generators` for creating components, screens, and tRPC routers using `yarn turbo gen`.
+- The app language should be Spanish, and the default language should be set to `es` in the `next.config.js` file. 
 
 Key Conventions
 
