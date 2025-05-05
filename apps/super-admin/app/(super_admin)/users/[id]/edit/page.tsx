@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@workspace/ui/components/button";
+import { Card } from "@workspace/ui/components/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
 import { createClient } from "@/utils/supabase/client";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";

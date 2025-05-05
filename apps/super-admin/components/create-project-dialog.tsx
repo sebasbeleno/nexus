@@ -33,14 +33,15 @@ interface CreateProjectDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  defaultOrganizationId?: string;
 }
 
-export function CreateProjectDialog({ isOpen, onClose, onSuccess }: CreateProjectDialogProps) {
+export function CreateProjectDialog({ isOpen, onClose, onSuccess, defaultOrganizationId }: CreateProjectDialogProps) {
   const router = useRouter();
   const { organizations, isLoading: isLoadingOrgs } = useFetchOrganizations();
   const [formData, setFormData] = useState({
     name: '',
-    organization_id: '',
+    organization_id: defaultOrganizationId || '',
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,7 +72,7 @@ export function CreateProjectDialog({ isOpen, onClose, onSuccess }: CreateProjec
 
       onSuccess();
       onClose();
-      setFormData({ name: '', organization_id: '' });
+      setFormData({ name: '', organization_id: defaultOrganizationId || '' });
     } catch (err) {
       if (err instanceof z.ZodError) {
         setErrors(err.issues.reduce((acc, issue) => ({
@@ -118,6 +119,7 @@ export function CreateProjectDialog({ isOpen, onClose, onSuccess }: CreateProjec
                 onValueChange={(value) => 
                   setFormData((prev) => ({ ...prev, organization_id: value }))
                 }
+                disabled={!!defaultOrganizationId}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccione una organización" />

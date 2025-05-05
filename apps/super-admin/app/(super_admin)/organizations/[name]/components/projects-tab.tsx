@@ -1,18 +1,22 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@workspace/ui/components/button";
 import { Loader2, AlertCircle, Info } from "lucide-react";
-import { useFetchProjects } from "@/hooks/use-fetch-projects";
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
 import { CreateProjectDialog } from "@/components/create-project-dialog";
+import { useFetchOrganizationProjects } from "@/hooks/use-fetch-organization-projects";
 import { ProjectCard } from "@/components/project-card";
 
+interface ProjectsTabProps {
+  organization: {
+    id: string;
+    name: string;
+  };
+}
 
-export default function ProjectsPage() {
-  const router = useRouter();
-  const { projects, isLoading, error, refetch } = useFetchProjects();
+export function ProjectsTab({ organization }: ProjectsTabProps) {
+  const { projects, isLoading, error, refetch } = useFetchOrganizationProjects(organization.id);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const formatDate = (dateString: string) => {
@@ -27,9 +31,9 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Proyectos</h1>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Proyectos de la Organización</h2>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           Crear Proyecto
         </Button>
@@ -39,6 +43,7 @@ export default function ProjectsPage() {
         isOpen={isCreateDialogOpen}
         onClose={() => setIsCreateDialogOpen(false)}
         onSuccess={refetch}
+        defaultOrganizationId={organization.id}
       />
 
       {isLoading && (
@@ -66,7 +71,7 @@ export default function ProjectsPage() {
           <Info className="h-4 w-4" />
           <AlertTitle>No hay proyectos</AlertTitle>
           <AlertDescription>
-            Aún no se han creado proyectos. ¡Crea el primero!
+            Aún no se han creado proyectos para esta organización. ¡Crea el primero!
           </AlertDescription>
         </Alert>
       )}
@@ -74,7 +79,14 @@ export default function ProjectsPage() {
       {!isLoading && !error && projects.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} formatDate={formatDate} />
+            <ProjectCard 
+              key={project.id} 
+              project={{
+                ...project,
+                organization: { name: organization.name }
+              }}
+              formatDate={formatDate}
+            />
           ))}
         </div>
       )}

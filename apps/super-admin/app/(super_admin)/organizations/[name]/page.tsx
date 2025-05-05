@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { GeneralTab } from "./components/general-tab";
 import { ActivityLogTab } from "./components/activity-log-tab";
 import { SettingsTab } from "./components/settings-tab";
+import { ProjectsTab } from "./components/projects-tab";
 
 export default async function OrganizationDetailsPage({ 
   params 
@@ -63,13 +64,17 @@ export default async function OrganizationDetailsPage({
         </div>
 
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid grid-cols-3 w-full max-w-md">
+          <TabsList className="grid grid-cols-4 w-full max-w-md">
             <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="activity">Registro de actividad</TabsTrigger>
+            <TabsTrigger value="projects">Proyectos</TabsTrigger>
+            <TabsTrigger value="activity">Actividad</TabsTrigger>
             <TabsTrigger value="settings">Configuración</TabsTrigger>
           </TabsList>
           <TabsContent value="general">
             <GeneralTab organization={organization} />
+          </TabsContent>
+          <TabsContent value="projects">
+            <ProjectsTab organization={organization} />
           </TabsContent>
           <TabsContent value="activity">
             <ActivityLogTab />
