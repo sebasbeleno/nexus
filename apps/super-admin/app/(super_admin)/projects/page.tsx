@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@workspace/ui/components/button";
-import { Project } from "@workspace/types";
 import { Loader2, AlertCircle, Info, MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,

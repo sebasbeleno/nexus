@@ -11,3 +11,13 @@ export interface Survey {
   created_at: string; // TIMESTAMPTZ - ISO 8601 string
   updated_at: string; // TIMESTAMPTZ - ISO 8601 string
 }
+
+export interface SurveyResponse {
+  id: string;
+  assignment_id: string;
+  responses: Record<string, any>;
+  submitted_at: string;
+  location_submitted: any; // GeoJSON object
+  metadata: Record<string, any> | null;
+  surveyor_notes: string | null;
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { AlertCircle, Edit, Loader2, PlusCircle, Trash2 } from "lucide-react";
 
 import type { Project } from "@workspace/types"; // Assuming Project type exists
@@ -21,7 +21,9 @@ import { CreateSurveyDialog } from "@/components/create-survey-dialog"; // Adjus
 import { createClient } from "@/utils/supabase/client";
 import Link from "next/link";
 
-export default function ProjectPage({ params }: { params: { id: string } }) {
+export default function ProjectPage({ params }: Promise<{ params: { id: string } }>) {
+  const { id: ProjectId } = use(params);
+
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -47,7 +49,7 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
       const { data, error: fetchError } = await supabase
         .from('projects')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', ProjectId)
         .single()
 
       if (fetchError) throw fetchError
@@ -65,10 +67,10 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
     } finally {
       setIsLoading(false);
     }
-  }, [params.id]);
+  }, [ProjectId]);
 
   const fetchSurveys = React.useCallback(async () => {
-    if (!params.id) return;
+    if (!ProjectId) return;
     setIsLoadingSurveys(true);
     setSurveyError(null);
     try {
@@ -76,7 +78,7 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
       const { data, error: fetchError } = await supabase
         .from('surveys')
         .select('*')
-        .eq('project_id', params.id)
+        .eq('project_id', ProjectId)
         .order('created_at', { ascending: false })
 
       if (fetchError) throw fetchError
@@ -89,7 +91,7 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
     } finally {
       setIsLoadingSurveys(false);
     }
-  }, [params.id]);
+  }, [ProjectId]);
 
   useEffect(() => {
     fetchProjectData();
@@ -274,7 +276,7 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
                     )}
                   </CardContent>
                   <CardFooter>
-                    <Link href={`/projects/${params.id}/surveys/${survey.id}`} className="w-full">
+                    <Link href={`/projects/${ProjectId}/surveys/${survey.id}`} className="w-full">
                       <Button variant="outline" size="sm" className="w-full">
                         Ver Detalles
                       </Button>

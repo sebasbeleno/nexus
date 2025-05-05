@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
-import { Survey } from "@workspace/types";
+import { Survey, Property, SurveyResponse } from "@workspace/types";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@workspace/ui/components/card";
@@ -23,35 +22,14 @@ import {
   AlertCircle,
   MapPin,
   Calendar,
-  Users,
   FileSpreadsheet,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
 import { Separator } from "@workspace/ui/components/separator";
 
-interface Property {
-  id: string;
-  address: string;
-  property_type: 'house' | 'apartment_building' | 'multi_floor_house';
-  location: any; // GeoJSON object
-  official_boundary: any; // GeoJSON object
-  metadata: Record<string, any> | null;
-  creation_method: 'client_provided' | 'surveyor_created' | 'admin_placeholder' | 'unknown';
-  created_at: string;
-  updated_at: string;
-}
 
-interface SurveyResponse {
-  id: string;
-  assignment_id: string;
-  responses: Record<string, any>;
-  submitted_at: string;
-  location_submitted: any; // GeoJSON object
-  metadata: Record<string, any> | null;
-  surveyor_notes: string | null;
-}
-
-export default function SurveyPage({ params }: { params: { id: string; survey_id: string } }) {
+export default function SurveyPage({ params }: { params: Promise<{ id: string; survey_id: string }> }) {
+  const { id: ProjectId, survey_id } = use(params)
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
@@ -70,7 +48,7 @@ export default function SurveyPage({ params }: { params: { id: string; survey_id
       const { data: surveyData, error: surveyError } = await supabase
         .from('surveys')
         .select('*')
-        .eq('id', params.survey_id)
+        .eq('id', survey_id)
         .single();
 
       if (surveyError) throw surveyError;
@@ -82,7 +60,7 @@ export default function SurveyPage({ params }: { params: { id: string; survey_id
       const { data: propertiesData, error: propertiesError } = await supabase
         .from('properties')
         .select('*')
-        .eq('project_id', params.id);
+        .eq('project_id', ProjectId);
 
       if (propertiesError) throw propertiesError;
       setProperties(propertiesData || []);
@@ -91,7 +69,7 @@ export default function SurveyPage({ params }: { params: { id: string; survey_id
       const { data: responsesData, error: responsesError } = await supabase
         .from('survey_responses')
         .select('*')
-        .eq('assignment_id', params.survey_id);
+        .eq('assignment_id', survey_id);
 
       if (responsesError) throw responsesError;
       setResponses(responsesData || []);
@@ -103,7 +81,7 @@ export default function SurveyPage({ params }: { params: { id: string; survey_id
     } finally {
       setIsLoading(false);
     }
-  }, [params.id, params.survey_id, supabase]);
+  }, [ProjectId, survey_id, supabase]);
 
   useEffect(() => {
     fetchSurveyData();
@@ -153,7 +131,7 @@ export default function SurveyPage({ params }: { params: { id: string; survey_id
     <div className="container mx-auto py-6 space-y-6">
       {/* Back button and header */}
       <div className="flex flex-col gap-6">
-        <Link href={`/projects/${params.id}`}>
+        <Link href={`/projects/${ProjectId}`}>
           <Button variant="outline" size="sm" className="mb-2">
             <ArrowLeft className="mr-2 w-4 h-4" /> Volver al Proyecto
           </Button>
@@ -218,9 +196,9 @@ export default function SurveyPage({ params }: { params: { id: string; survey_id
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">Fecha de Creación</p>
-                  <p className="text-sm">{new Date(survey.created_at).toLocaleDateString('es-ES', { 
-                    day: 'numeric', 
-                    month: 'long', 
+                  <p className="text-sm">{new Date(survey.created_at).toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'long',
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
@@ -228,9 +206,9 @@ export default function SurveyPage({ params }: { params: { id: string; survey_id
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">Última Actualización</p>
-                  <p className="text-sm">{new Date(survey.updated_at).toLocaleDateString('es-ES', { 
-                    day: 'numeric', 
-                    month: 'long', 
+                  <p className="text-sm">{new Date(survey.updated_at).toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'long',
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit'
@@ -239,10 +217,10 @@ export default function SurveyPage({ params }: { params: { id: string; survey_id
                 {survey.deadline && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-muted-foreground">Fecha Límite</p>
-                    <p className="text-sm">{new Date(survey.deadline).toLocaleDateString('es-ES', { 
-                      day: 'numeric', 
-                      month: 'long', 
-                      year: 'numeric' 
+                    <p className="text-sm">{new Date(survey.deadline).toLocaleDateString('es-ES', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
                     })}</p>
                   </div>
                 )}
@@ -290,7 +268,7 @@ export default function SurveyPage({ params }: { params: { id: string; survey_id
                 </Badge>
                 {survey.deadline && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    {new Date(survey.deadline) < new Date() 
+                    {new Date(survey.deadline) < new Date()
                       ? `Venció el ${new Date(survey.deadline).toLocaleDateString('es-ES')}`
                       : `Vence el ${new Date(survey.deadline).toLocaleDateString('es-ES')}`}
                   </p>
@@ -407,10 +385,10 @@ export default function SurveyPage({ params }: { params: { id: string; survey_id
                             })}
                           </td>
                           <td className="px-4 py-2">
-                            {response.surveyor_notes ? 
-                              (response.surveyor_notes.length > 50 
-                                ? `${response.surveyor_notes.substring(0, 50)}...` 
-                                : response.surveyor_notes) 
+                            {response.surveyor_notes ?
+                              (response.surveyor_notes.length > 50
+                                ? `${response.surveyor_notes.substring(0, 50)}...`
+                                : response.surveyor_notes)
                               : 'Sin notas'}
                           </td>
                           <td className="px-4 py-2">
