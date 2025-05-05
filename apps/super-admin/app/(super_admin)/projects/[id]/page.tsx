@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/componen
 
 import { CreateSurveyDialog } from "@/components/create-survey-dialog"; // Adjust path
 import { createClient } from "@/utils/supabase/client";
+import Link from "next/link";
 
 export default function ProjectPage({ params }: { params: { id: string } }) {
   const [project, setProject] = useState<Project | null>(null);
@@ -230,9 +231,9 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
         {/* Surveys Tab */}
         <TabsContent value="surveys" className="space-y-4">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Encuestas</h2> {/* Translate heading */}
+            <h2 className="text-xl font-semibold">Encuestas</h2> 
             <Button size="sm" onClick={() => setShowCreateSurveyDialog(true)}>
-              <PlusCircle className="mr-2 size-4" /> Crear Encuesta {/* Translate button text */}
+              <PlusCircle className="mr-2 size-4" /> Crear Encuesta 
             </Button>
           </div>
 
@@ -243,16 +244,16 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
           ) : surveyError ? (
             <Alert variant="destructive">
               <AlertCircle className="w-4 h-4" />
-              <AlertTitle>Error al Cargar Encuestas</AlertTitle> {/* Translate alert title */}
+              <AlertTitle>Error al Cargar Encuestas</AlertTitle> 
               <AlertDescription>{surveyError}</AlertDescription>
             </Alert>
           ) : surveys.length === 0 ? (
             <Card className="text-center py-10">
               <CardContent>
-                <h3 className="text-lg font-medium">Aún no hay Encuestas</h3> {/* Translate heading */}
-                <p className="text-muted-foreground text-sm mb-4">Empieza creando tu primera encuesta.</p> {/* Translate text */}
+                <h3 className="text-lg font-medium">Aún no hay Encuestas</h3> 
+                <p className="text-muted-foreground text-sm mb-4">Empieza creando tu primera encuesta.</p> 
                 <Button size="sm" onClick={() => setShowCreateSurveyDialog(true)}>
-                  <PlusCircle className="mr-2 size-4" /> Crear Encuesta {/* Translate button text */}
+                  <PlusCircle className="mr-2 size-4" /> Crear Encuesta 
                 </Button>
               </CardContent>
             </Card>
@@ -262,16 +263,22 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
                 <Card key={survey.id}>
                   <CardHeader>
                     <CardTitle>{survey.name}</CardTitle>
-                    <CardDescription>{survey.description || "Sin descripción"}</CardDescription> {/* Translate placeholder */}
+                    <CardDescription>{survey.description || "Sin descripción"}</CardDescription> 
                   </CardHeader>
                   <CardContent>
-                    <Badge variant="outline">Versión: {survey.version}</Badge> {/* Translate badge text */}
-                    {/* Add more details like deadline, status etc. */}
+                    <Badge variant="outline">Versión: {survey.version}</Badge> 
+                    {survey.deadline && (
+                      <Badge variant="outline" className="ml-2">
+                        Vence: {new Date(survey.deadline).toLocaleDateString('es-ES')}
+                      </Badge>
+                    )}
                   </CardContent>
                   <CardFooter>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Ver Detalles {/* Translate button text */}
-                    </Button>
+                    <Link href={`/projects/${params.id}/surveys/${survey.id}`} className="w-full">
+                      <Button variant="outline" size="sm" className="w-full">
+                        Ver Detalles
+                      </Button>
+                    </Link>
                     {/* Add Edit/Delete buttons later */}
                   </CardFooter>
                 </Card>
