@@ -4,7 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 import { Button } from "@workspace/ui/components/button";
 import { ArrowLeft } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { SurveyBuilder } from "@/components/survey-builder/survey-builder";
 
 export default function EditSurveyPage({ params }: { params: Promise<{ id: string; survey_id: string }> }) {
   const { id: projectId, survey_id } = use(params);
@@ -17,24 +17,15 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
             <ArrowLeft className="mr-2 w-4 h-4" /> Volver a la Encuesta
           </Button>
         </Link>
-        <h1 className="text-2xl font-bold">Editar Encuesta</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Editor de Encuesta</h1>
+          <Button variant="outline" size="sm">
+            Vista Previa
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Editor de Encuesta</CardTitle>
-          <CardDescription>Edita la estructura y configuración de la encuesta</CardDescription>
-        </CardHeader>
-        <CardContent className="py-8 text-center">
-          <p className="text-muted-foreground">
-            El editor de encuestas estará disponible pronto. Aquí podrás modificar las preguntas,
-            secciones y configuración de la encuesta.
-          </p>
-          <p className="text-muted-foreground mt-2">
-            ID de la encuesta: <span className="font-mono">{survey_id}</span>
-          </p>
-        </CardContent>
-      </Card>
+      <SurveyBuilder />
     </div>
   );
 }
