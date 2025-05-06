@@ -23,90 +23,13 @@ interface SurveyStore {
 	updateQuestion: (sectionId: string, questionId: string, question: Partial<Question>) => void;
 }
 
-// Hardcoded example survey object conforming to the schema
-const exampleSurvey: SurveyStructure = {
-	surveyId: "encuesta-vivienda-social-2025",
-	title: "Encuesta de Vivienda Social 2025",
-	description: "Encuesta para evaluar condiciones y necesidades de vivienda.",
+// Empty survey structure template
+const emptyStructure: SurveyStructure = {
+	surveyId: "",
+	title: "Nueva Encuesta",
+	description: "",
 	version: 1,
-	sections: [
-		{
-			id: "sec_general_info",
-			title: "Información General",
-			description: "Detalles básicos sobre el hogar.",
-			questions: [
-				{
-					id: "q_head_name",
-					type: "text",
-					label: "Nombre del jefe de hogar",
-					placeholder: "Ingrese el nombre completo",
-					validations: [
-						{ type: "required", message: "Este campo es obligatorio" },
-						{ type: "minLength", value: 5, message: "Debe tener al menos 5 caracteres" }
-					]
-				},
-				{
-					id: "q_num_residents",
-					type: "number",
-					label: "¿Cuántas personas viven en el hogar?",
-					validations: [
-						{ type: "required", message: "Campo obligatorio" },
-						{ type: "minValue", value: 1, message: "Debe ser al menos 1" }
-					]
-				},
-				{
-					id: "q_household_income",
-					type: "select",
-					label: "Ingresos mensuales del hogar",
-					options: [
-						{ value: "range1", label: "Menos de $500.000" },
-						{ value: "range2", label: "$500.000 - $1.000.000" },
-						{ value: "range3", label: "$1.000.000 - $2.000.000" },
-						{ value: "range4", label: "Más de $2.000.000" }
-					],
-					validations: [
-						{ type: "required", message: "Por favor seleccione una opción" }
-					]
-				}
-			]
-		},
-		{
-			id: "sec_housing_conditions",
-			title: "Condiciones de la Vivienda",
-			description: "Información sobre la estructura física.",
-			questions: [
-				{
-					id: "q_property_type",
-					type: "select",
-					label: "Tipo de vivienda",
-					options: [
-						{ value: "house", label: "Casa" },
-						{ value: "apartment", label: "Apartamento" },
-						{ value: "room", label: "Habitación" },
-						{ value: "other", label: "Otro" }
-					],
-					validations: [
-						{ type: "required", message: "Seleccione una opción" }
-					]
-				},
-				{
-					id: "q_construction_material",
-					type: "radio",
-					label: "Material principal de construcción",
-					options: [
-						{ value: "brick", label: "Ladrillo" },
-						{ value: "concrete", label: "Concreto" },
-						{ value: "wood", label: "Madera" },
-						{ value: "prefab", label: "Prefabricado" },
-						{ value: "other", label: "Otro" }
-					],
-					validations: [
-						{ type: "required", message: "Por favor seleccione una opción" }
-					]
-				}
-			]
-		}
-	]
+	sections: []
 };
 
 // Helper function to generate a unique ID
@@ -115,7 +38,7 @@ function generateId(prefix: string = 'section_'): string {
 }
 
 export const useSurveyStore = create<SurveyStore>((set) => ({
-	survey: exampleSurvey,
+	survey: emptyStructure,
 	setSurvey: (survey) => set({ survey }),
 
 	updateSurveyTitle: (title) =>
