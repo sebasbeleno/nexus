@@ -137,7 +137,7 @@ export function SectionCard({ section, dragHandleProps }: SectionCardProps) {
             </div>
           ) : (
             section.questions.map((question) => (
-              <QuestionCard key={question.id} question={question} />
+              <QuestionCard key={question.id} question={question} sectionId={section.id} />
             ))
           )}
         </div>

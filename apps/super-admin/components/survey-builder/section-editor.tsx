@@ -53,7 +53,11 @@ export function SectionEditor({ sectionId }: SectionEditorProps) {
         ) : (
           <div className="space-y-4">
             {currentSection.questions.map((question) => (
-              <QuestionCard key={question.id} question={question} />
+              <QuestionCard 
+                key={question.id} 
+                question={question} 
+                sectionId={currentSection.id} 
+              />
             ))}
           </div>
         )}

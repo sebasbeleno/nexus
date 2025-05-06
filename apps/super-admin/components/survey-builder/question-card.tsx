@@ -1,16 +1,30 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@workspace/ui/components/card";
 import { Badge } from "@workspace/ui/components/badge";
+import { Button } from "@workspace/ui/components/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@workspace/ui/components/tooltip";
-import { Info } from "lucide-react";
+import { Info, Edit2, Trash2 } from "lucide-react";
 import { Question } from "@workspace/types";
+import { useSurveyStore } from "../../app/(super_admin)/projects/[id]/surveys/[survey_id]/edit/store";
+import { QuestionEditDialog } from "./question-edit-dialog";
+import { QuestionDeleteDialog } from "./question-delete-dialog";
 
 interface QuestionCardProps {
   question: Question;
+  sectionId: string;
 }
 
-export function QuestionCard({ question }: QuestionCardProps) {
+export function QuestionCard({ question, sectionId }: QuestionCardProps) {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { deleteQuestion } = useSurveyStore();
+
+  const handleDelete = () => {
+    deleteQuestion(sectionId, question.id);
+    setIsDeleteDialogOpen(false);
+  };
   const renderValidations = () => {
     if (!question.validations || question.validations.length === 0) return null;
     
@@ -64,9 +78,31 @@ export function QuestionCard({ question }: QuestionCardProps) {
   return (
     <Card className="mb-3">
       <CardHeader className="py-3">
-        <CardTitle className="text-sm font-medium flex items-center">
-          {question.label}
-          {renderQuestionType()}
+        <CardTitle className="text-sm font-medium flex items-center justify-between">
+          <div className="flex items-center">
+            {question.label}
+            {renderQuestionType()}
+          </div>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => setIsEditDialogOpen(true)}
+              title="Editar pregunta"
+            >
+              <Edit2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-destructive"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              title="Eliminar pregunta"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="py-2">
@@ -83,6 +119,21 @@ export function QuestionCard({ question }: QuestionCardProps) {
         {renderOptions()}
         {renderValidations()}
       </CardContent>
+
+      {/* Diálogos para edición y eliminación */}
+      <QuestionEditDialog
+        isOpen={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        sectionId={sectionId}
+        questionId={question.id}
+      />
+      
+      <QuestionDeleteDialog
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDelete}
+        questionLabel={question.label}
+      />
     </Card>
   );
 }
