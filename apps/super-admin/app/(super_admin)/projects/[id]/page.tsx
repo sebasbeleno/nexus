@@ -1,28 +1,27 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useState, use } from "react";
-import { AlertCircle, Edit, Loader2, PlusCircle, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertCircle, Edit, Loader2, Trash2 } from "lucide-react";
 
-import type { Project } from "@workspace/types"; // Assuming Project type exists
-import type { Survey } from "@workspace/types";
+import type { Project } from "@workspace/types";
 import { Alert, AlertDescription, AlertTitle } from "@workspace/ui/components/alert";
-import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card";
+import { Card, CardContent } from "@workspace/ui/components/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@workspace/ui/components/dialog";
 import { Input } from "@workspace/ui/components/input";
 import { Label } from "@workspace/ui/components/label";
 import { Separator } from "@workspace/ui/components/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@workspace/ui/components/tabs";
-// import { createClient } from '@/utils/supabase/client' // Adjust path as needed
-
-import { CreateSurveyDialog } from "@/components/create-survey-dialog"; // Adjust path
 import { createClient } from "@/utils/supabase/client";
-import Link from "next/link";
 
-export default function ProjectPage({ params }: Promise<{ params: { id: string } }>) {
-  const { id: ProjectId } = use(params);
+// Import the tab components
+import { ProjectDetailsTab } from "./components/project-details-tab";
+import { ProjectSettingsTab } from "./components/project-settings-tab";
+import { SurveysTab } from "./components/project-surveys-tab";
+
+export default function ProjectPage({ params }: { params: { id: string } }) {
+  const { id: ProjectId } = params;
 
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,12 +31,6 @@ export default function ProjectPage({ params }: Promise<{ params: { id: string }
   const [error, setError] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // State for surveys
-  const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [isLoadingSurveys, setIsLoadingSurveys] = useState(true);
-  const [surveyError, setSurveyError] = useState<string | null>(null);
-  const [showCreateSurveyDialog, setShowCreateSurveyDialog] = useState(false);
 
   const supabase = createClient();
 
@@ -69,34 +62,9 @@ export default function ProjectPage({ params }: Promise<{ params: { id: string }
     }
   }, [ProjectId]);
 
-  const fetchSurveys = React.useCallback(async () => {
-    if (!ProjectId) return;
-    setIsLoadingSurveys(true);
-    setSurveyError(null);
-    try {
-
-      const { data, error: fetchError } = await supabase
-        .from('surveys')
-        .select('*')
-        .eq('project_id', ProjectId)
-        .order('created_at', { ascending: false })
-
-      if (fetchError) throw fetchError
-
-      setSurveys(data || [])
-    } catch (err: any) {
-      console.error("Failed to fetch surveys:", err);
-      setSurveyError(err.message || "No se pudieron cargar las encuestas."); // Translate error message
-      setSurveys([]);
-    } finally {
-      setIsLoadingSurveys(false);
-    }
-  }, [ProjectId]);
-
   useEffect(() => {
     fetchProjectData();
-    fetchSurveys();
-  }, [fetchProjectData, fetchSurveys]);
+  }, [fetchProjectData]);
 
   const handleSave = async () => {
     if (!project) return;
@@ -218,88 +186,24 @@ export default function ProjectPage({ params }: Promise<{ params: { id: string }
 
         {/* Details Tab */}
         <TabsContent value="details" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Detalles del Proyecto</CardTitle> {/* Translate card title */}
-              <CardDescription>Resumen de la información del proyecto.</CardDescription> {/* Translate card description */}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Display non-editable details here if needed, or keep edit form separate */}
-              <p>Contenido de detalles pendiente. El modo de edición se maneja sobre las pestañas.</p> {/* Translate placeholder text */}
-            </CardContent>
-          </Card>
+          {project && <ProjectDetailsTab project={project} />}
         </TabsContent>
 
         {/* Surveys Tab */}
         <TabsContent value="surveys" className="space-y-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Encuestas</h2> 
-            <Button size="sm" onClick={() => setShowCreateSurveyDialog(true)}>
-              <PlusCircle className="mr-2 size-4" /> Crear Encuesta 
-            </Button>
-          </div>
-
-          {isLoadingSurveys ? (
-            <div className="flex justify-center items-center py-10">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : surveyError ? (
-            <Alert variant="destructive">
-              <AlertCircle className="w-4 h-4" />
-              <AlertTitle>Error al Cargar Encuestas</AlertTitle> 
-              <AlertDescription>{surveyError}</AlertDescription>
-            </Alert>
-          ) : surveys.length === 0 ? (
-            <Card className="text-center py-10">
-              <CardContent>
-                <h3 className="text-lg font-medium">Aún no hay Encuestas</h3> 
-                <p className="text-muted-foreground text-sm mb-4">Empieza creando tu primera encuesta.</p> 
-                <Button size="sm" onClick={() => setShowCreateSurveyDialog(true)}>
-                  <PlusCircle className="mr-2 size-4" /> Crear Encuesta 
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {surveys.map((survey) => (
-                <Card key={survey.id}>
-                  <CardHeader>
-                    <CardTitle>{survey.name}</CardTitle>
-                    <CardDescription>{survey.description || "Sin descripción"}</CardDescription> 
-                  </CardHeader>
-                  <CardContent>
-                    <Badge variant="outline">Versión: {survey.version}</Badge> 
-                    {survey.deadline && (
-                      <Badge variant="outline" className="ml-2">
-                        Vence: {new Date(survey.deadline).toLocaleDateString('es-ES')}
-                      </Badge>
-                    )}
-                  </CardContent>
-                  <CardFooter>
-                    <Link href={`/projects/${ProjectId}/surveys/${survey.id}`} className="w-full">
-                      <Button variant="outline" size="sm" className="w-full">
-                        Ver Detalles
-                      </Button>
-                    </Link>
-                    {/* Add Edit/Delete buttons later */}
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          )}
+          <SurveysTab projectId={ProjectId} />
         </TabsContent>
 
         {/* Settings Tab */}
         <TabsContent value="settings">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuración del Proyecto</CardTitle> {/* Translate card title */}
-              <CardDescription>Configura los ajustes y permisos del proyecto</CardDescription> {/* Translate card description */}
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">El contenido de configuración se añadirá aquí</p> {/* Translate placeholder text */}
-            </CardContent>
-          </Card>
+          {project && (
+            <ProjectSettingsTab
+              project={project}
+              onProjectUpdate={(updatedProject) => {
+                setProject(updatedProject);
+              }}
+            />
+          )}
         </TabsContent>
       </Tabs>
 
@@ -324,17 +228,7 @@ export default function ProjectPage({ params }: Promise<{ params: { id: string }
         </DialogContent>
       </Dialog>
 
-      {/* Create Survey Dialog */}
-      {project && (
-        <CreateSurveyDialog
-          projectId={project.id}
-          open={showCreateSurveyDialog}
-          onOpenChange={setShowCreateSurveyDialog}
-          onSurveyCreated={() => {
-            fetchSurveys(); // Refresh the list after creation
-          }}
-        />
-      )}
+      {/* No CreateSurveyDialog here - moved to SurveysTab */}
     </div>
   );
 }
