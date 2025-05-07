@@ -5,8 +5,10 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  getFilteredRowModel,
   SortingState,
   useReactTable,
+  ColumnFiltersState,
 } from "@tanstack/react-table"
 
 import {
@@ -23,13 +25,29 @@ import { ArrowDown, ArrowUp } from "lucide-react"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  isLoading?: boolean
+  filterValue?: string
+  filterColumn?: string
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  isLoading = false,
+  filterValue = "",
+  filterColumn = "",
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  
+  // Apply filter if filterValue and filterColumn are provided
+  if (filterValue && filterColumn) {
+    columnFilters.length = 0;
+    columnFilters.push({
+      id: filterColumn,
+      value: filterValue,
+    });
+  }
   
   const table = useReactTable({
     data,
@@ -37,8 +55,11 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnFiltersChange: setColumnFilters,
     state: {
       sorting,
+      columnFilters,
     },
   })
 
@@ -73,7 +94,13 @@ export function DataTable<TData, TValue>({
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows?.length ? (
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                Cargando...
+              </TableCell>
+            </TableRow>
+          ) : table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <TableRow
                 key={row.id}
@@ -89,7 +116,7 @@ export function DataTable<TData, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+                No hay resultados.
               </TableCell>
             </TableRow>
           )}

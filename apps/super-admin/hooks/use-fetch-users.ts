@@ -15,7 +15,7 @@ export type User = {
   is_active: boolean
 }
 
-export function useFetchUsers() {
+export function useFetchUsers(searchTerm?: string) {
   const [users, setUsers] = useState<User[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
@@ -23,12 +23,19 @@ export function useFetchUsers() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        setLoading(true)
         const supabase = createClient()
         
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('created_at', { ascending: false })
+        let query = supabase.from('profiles').select('*')
+        
+        if (searchTerm) {
+          // Search in email, first_name, last_name, or role fields
+          query = query.or(
+            `first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,role.ilike.%${searchTerm}%`
+          )
+        }
+        
+        const { data, error } = await query.order('created_at', { ascending: false })
         
         if (error) {
           throw error
@@ -43,7 +50,7 @@ export function useFetchUsers() {
     }
     
     fetchUsers()
-  }, [])
+  }, [searchTerm])
   
   return { users, loading, error }
 }
