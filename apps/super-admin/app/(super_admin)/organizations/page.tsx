@@ -1,12 +1,19 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { columns, Organization } from "./columns";
+import { columns } from "./columns";
 import { DataTable } from "../../../components/data-table";
 import { CreateOrganizationDialog } from "./components/create-organization-dialog";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { SearchInput } from "./components/search-input";
+import { Organization } from "@workspace/types";
 
-async function getData(supabase: SupabaseClient<any, "public", any>): Promise<Organization[]> {
+interface OrganizationResponse extends Organization {
+  active_users: {
+    count: number;
+  }[];
+}
+
+async function getData(supabase: SupabaseClient<any, "public", any>): Promise<Partial<OrganizationResponse>[]> {
   const { data, error } = await supabase
     .from('organizations')
     .select(`
@@ -48,7 +55,7 @@ export default async function Dashboard({ searchParams }: { searchParams?: { sea
   const searchTerm = searchParams?.search?.toLowerCase();
   if (searchTerm) {
     data = data.filter((org) => 
-      org.name.toLowerCase().includes(searchTerm)
+      (org.name ?? '').toLowerCase().includes(searchTerm)
     );
   }
 
