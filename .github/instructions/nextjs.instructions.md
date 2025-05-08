@@ -32,6 +32,15 @@ UI and Styling
 - Implement responsive design with a mobile-first approach.
 - Ensure styling consistency between web and native applications.
 - Utilize shadcn/ui's theming capabilities for consistent design across platforms.
+- To display the toast component, import `toast` from `sonner` and use the `toast` function to trigger notifications. For example:
+```typescript
+import { toast } from 'sonner';
+
+toast.success('Success message', {
+    description: 'This is a success message',
+});
+```
+
 
 State Management and Data Fetching
 
