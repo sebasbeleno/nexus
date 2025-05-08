@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@workspace
 import { Badge } from "@workspace/ui/components/badge";
 import { Button } from "@workspace/ui/components/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@workspace/ui/components/tooltip";
-import { Info, Edit2, Trash2 } from "lucide-react";
+import { Info, Edit2, Trash2, GitBranch } from "lucide-react";
 import { Question } from "@workspace/types";
 import { useSurveyStore } from "../../app/(super_admin)/projects/[id]/surveys/[survey_id]/edit/store";
 import { QuestionEditDialog } from "./question-edit-dialog";
@@ -74,14 +74,39 @@ export function QuestionCard({ question, sectionId }: QuestionCardProps) {
       </div>
     );
   };
+  
+  const renderConditionalLogic = () => {
+    if (!question.conditionalLogic || !question.conditionalLogic.enabled) return null;
+    
+    return (
+      <Badge variant="outline" className="ml-2 bg-amber-50 text-amber-700 border-amber-200">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="flex items-center gap-1">
+                <GitBranch className="h-3 w-3" />
+                Condicional
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Esta pregunta tiene lógica condicional aplicada.</p>
+              <p className="font-medium mt-1">{question.conditionalLogic.logic === "AND" ? "Todas las condiciones" : "Cualquier condición"}</p>
+              <p className="text-xs mt-1">{question.conditionalLogic.conditions.length} condicion(es)</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </Badge>
+    );
+  };
 
   return (
     <Card className="mb-3">
       <CardHeader className="py-3">
         <CardTitle className="text-sm font-medium flex items-center justify-between">
-          <div className="flex items-center">
+          <div className="flex items-center flex-wrap">
             {question.label}
             {renderQuestionType()}
+            {renderConditionalLogic()}
           </div>
           <div className="flex gap-1">
             <Button

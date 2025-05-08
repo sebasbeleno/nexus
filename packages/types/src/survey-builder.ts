@@ -32,6 +32,23 @@ export interface QuestionOption {
   label: string;
 }
 
+export type ConditionalOperator = 'equals' | 'notEquals' | 'greaterThan' | 'lessThan' | 'contains' | 'isEmpty' | 'isNotEmpty';
+
+export type LogicalOperator = 'AND' | 'OR';
+
+export interface ConditionalLogicCondition {
+  questionId: string;
+  operator: ConditionalOperator;
+  value?: string | number | boolean;
+}
+
+export interface ConditionalLogic {
+  enabled: boolean;
+  action: 'show';
+  logic: LogicalOperator;
+  conditions: ConditionalLogicCondition[];
+}
+
 export interface Question {
   id: string;
   type: QuestionType;
@@ -41,6 +58,7 @@ export interface Question {
   required?: boolean;
   options?: QuestionOption[];
   validations?: ValidationRule[];
+  conditionalLogic?: ConditionalLogic;
 }
 
 export interface Section {

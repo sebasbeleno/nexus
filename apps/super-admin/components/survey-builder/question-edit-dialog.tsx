@@ -22,11 +22,13 @@ import {
   SelectValue,
 } from "@workspace/ui/components/select";
 import { useSurveyStore } from "../../app/(super_admin)/projects/[id]/surveys/[survey_id]/edit/store";
-import { Question, ValidationRule, ValidationTypes, QuestionOption } from "@workspace/types";
+import { Question, ValidationRule, ValidationTypes, QuestionOption, ConditionalLogic, ConditionalOperator, LogicalOperator, ConditionalLogicCondition, QuestionType } from "@workspace/types";
 import { getValidValidationTypes, getValidationDescription, validationNeedsValue, getValidationValueInputType } from "@/lib/validation-helpers";
-import { Plus, X, Trash2 } from "lucide-react";
+import { Plus, X, Trash2, Check } from "lucide-react";
 import { Badge } from "@workspace/ui/components/badge";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
+import { Switch } from "@workspace/ui/components/switch";
+import { getQuestionById, getConditionalOperatorDescription, operatorNeedsValue } from "@/lib/survey-helpers";
 
 interface QuestionEditDialogProps {
   isOpen: boolean;
@@ -59,6 +61,17 @@ export function QuestionEditDialog({
   // Estado para un nuevo campo de opción
   const [newOptionLabel, setNewOptionLabel] = useState("");
   const [newOptionValue, setNewOptionValue] = useState("");
+  
+  // Estados para lógica condicional
+  const [conditionalLogicEnabled, setConditionalLogicEnabled] = useState(false);
+  const [conditionalAction, setConditionalAction] = useState<'show'>('show');
+  const [conditionalLogic, setConditionalLogic] = useState<LogicalOperator>('AND');
+  const [conditionalConditions, setConditionalConditions] = useState<ConditionalLogicCondition[]>([]);
+  
+  // Estado para una nueva condición
+  const [newConditionQuestionId, setNewConditionQuestionId] = useState<string>('no-selection');
+  const [newConditionOperator, setNewConditionOperator] = useState<ConditionalOperator>('equals');
+  const [newConditionValue, setNewConditionValue] = useState<string>('');
 
   // Carga los datos de la pregunta actual cuando se abre el diálogo
   useEffect(() => {
@@ -73,6 +86,25 @@ export function QuestionEditDialog({
         setOptions(question.options || []);
         setValidations(question.validations || []);
         setQuestionType(question.type);
+        
+        // Cargar datos de lógica condicional
+        if (question.conditionalLogic) {
+          setConditionalLogicEnabled(question.conditionalLogic.enabled);
+          setConditionalAction(question.conditionalLogic.action);
+          setConditionalLogic(question.conditionalLogic.logic);
+          setConditionalConditions(question.conditionalLogic.conditions || []);
+        } else {
+          // Valores predeterminados
+          setConditionalLogicEnabled(false);
+          setConditionalAction('show');
+          setConditionalLogic('AND');
+          setConditionalConditions([]);
+        }
+        
+        // Resetear los valores del formulario de nuevas condiciones
+        setNewConditionQuestionId('no-selection');
+        setNewConditionOperator('equals');
+        setNewConditionValue('');
       }
     }
   }, [isOpen, sectionId, questionId, survey.sections]);
@@ -96,6 +128,19 @@ export function QuestionEditDialog({
     } else if (questionRequiresOptions) {
       // Si el tipo de pregunta requiere opciones pero no hay ninguna, establecer como undefined
       updates.options = undefined;
+    }
+    
+    // Actualizamos la lógica condicional
+    if (conditionalLogicEnabled && conditionalConditions.length > 0) {
+      updates.conditionalLogic = {
+        enabled: true,
+        action: conditionalAction,
+        logic: conditionalLogic,
+        conditions: conditionalConditions
+      };
+    } else {
+      // Si la lógica condicional está desactivada, la establecemos como undefined
+      updates.conditionalLogic = undefined;
     }
 
     updateQuestion(sectionId, questionId, updates);
@@ -151,6 +196,47 @@ export function QuestionEditDialog({
     setOptions(newOptions);
   };
 
+  // Añadir una nueva condición
+  const handleAddCondition = () => {
+    if (!newConditionQuestionId || newConditionQuestionId === 'no-selection' || newConditionQuestionId === 'no-questions') return;
+    
+    const newCondition: ConditionalLogicCondition = {
+      questionId: newConditionQuestionId,
+      operator: newConditionOperator,
+    };
+    
+    // Solo agregamos el valor si el operador no es isEmpty o isNotEmpty
+    if (newConditionOperator !== 'isEmpty' && newConditionOperator !== 'isNotEmpty' && newConditionValue) {
+      newCondition.value = newConditionValue;
+    }
+    
+    setConditionalConditions([...conditionalConditions, newCondition]);
+    setNewConditionQuestionId('no-selection');
+    setNewConditionOperator('equals');
+    setNewConditionValue('');
+  };
+  
+  // Eliminar una condición
+  const handleRemoveCondition = (index: number) => {
+    const newConditions = [...conditionalConditions];
+    newConditions.splice(index, 1);
+    setConditionalConditions(newConditions);
+  };
+  
+  // Obtener todas las preguntas disponibles excepto la actual
+  const availableQuestions = survey.sections.flatMap(section => 
+    section.questions.filter(q => q.id !== questionId)
+  );
+  
+  // Obtener el tipo de pregunta seleccionada como trigger
+  const getTriggerQuestionType = (questionId: string): QuestionType | null => {
+    for (const section of survey.sections) {
+      const question = section.questions.find(q => q.id === questionId);
+      if (question) return question.type;
+    }
+    return null;
+  };
+  
   // Verifica si el tipo de pregunta actual necesita opciones
   const questionRequiresOptions = ['select', 'multiselect', 'radio', 'checkbox'].includes(questionType);
 
@@ -168,6 +254,7 @@ export function QuestionEditDialog({
           <TabsList className="mb-4 w-full">
             <TabsTrigger className="flex-1" value="properties">Propiedades</TabsTrigger>
             <TabsTrigger className="flex-1" value="validations">Validaciones</TabsTrigger>
+            <TabsTrigger className="flex-1" value="conditionals">Condicionales</TabsTrigger>
           </TabsList>
 
           <TabsContent value="properties" className="space-y-4">
@@ -345,6 +432,192 @@ export function QuestionEditDialog({
                     <Plus className="h-4 w-4 mr-1" /> Añadir Validación
                   </Button>
                 </div>
+              </div>
+            </ScrollArea>
+          </TabsContent>
+          
+          <TabsContent value="conditionals" className="space-y-4">
+            <ScrollArea className="h-[400px]">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="conditional-logic-enabled"
+                    checked={conditionalLogicEnabled} 
+                    onCheckedChange={setConditionalLogicEnabled}
+                  />
+                  <Label htmlFor="conditional-logic-enabled">Habilitar lógica condicional</Label>
+                </div>
+                
+                {conditionalLogicEnabled && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Acción</Label>
+                      <Select 
+                        value={conditionalAction} 
+                        onValueChange={(value) => setConditionalAction(value as 'show')}
+                        disabled={true} // Solo hay una opción por ahora
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar acción" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="show">Mostrar</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">Esto determinará qué hacer con esta pregunta cuando se cumplan las condiciones.</p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Operador lógico</Label>
+                      <Select 
+                        value={conditionalLogic} 
+                        onValueChange={(value) => setConditionalLogic(value as LogicalOperator)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar operador" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="AND">Todas las condiciones (AND)</SelectItem>
+                          <SelectItem value="OR">Cualquier condición (OR)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">Determina si deben cumplirse todas las condiciones o solo alguna de ellas.</p>
+                    </div>
+                    
+                    <div>
+                      <Label className="block mb-2">Condiciones Actuales</Label>
+                      {conditionalConditions.length === 0 ? (
+                        <p className="text-muted-foreground text-sm">No hay condiciones configuradas.</p>
+                      ) : (
+                        <div className="space-y-2">
+                          {conditionalConditions.map((condition, index) => {
+                            // Encontrar la pregunta relacionada para mostrar su etiqueta
+                            const triggerQuestion = availableQuestions.find(q => q.id === condition.questionId);
+                            
+                            return (
+                              <div key={index} className="flex items-center justify-between p-3 border rounded-md">
+                                <div className="flex flex-col gap-1">
+                                  <span className="font-medium">{triggerQuestion?.label || "Pregunta desconocida"}</span>
+                                  <span className="text-sm text-muted-foreground">
+                                    {getConditionalOperatorDescription(condition.operator)}
+                                    {' '}
+                                    {condition.value !== undefined ? <strong>{condition.value}</strong> : ''}
+                                  </span>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleRemoveCondition(index)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <Label className="block mb-2">Añadir Nueva Condición</Label>
+                      <div className="space-y-3">
+                        <div>
+                          <Label>Pregunta disparadora</Label>
+                          <Select
+                            value={newConditionQuestionId}
+                            onValueChange={setNewConditionQuestionId}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar pregunta" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableQuestions.length === 0 ? (
+                                <SelectItem value="no-questions" disabled>No hay preguntas disponibles</SelectItem>
+                              ) : (
+                                <>
+                                  <SelectItem value="no-selection" disabled>Seleccione una pregunta</SelectItem>
+                                  {availableQuestions.map((question) => (
+                                    <SelectItem key={question.id} value={question.id}>
+                                      {question.label}
+                                    </SelectItem>
+                                  ))}
+                                </>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label>Operador</Label>
+                          <Select
+                            value={newConditionOperator}
+                            onValueChange={(value) => setNewConditionOperator(value as ConditionalOperator)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar operador" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="equals">Es igual a</SelectItem>
+                              <SelectItem value="notEquals">No es igual a</SelectItem>
+                              <SelectItem value="greaterThan">Mayor que</SelectItem>
+                              <SelectItem value="lessThan">Menor que</SelectItem>
+                              <SelectItem value="contains">Contiene</SelectItem>
+                              <SelectItem value="isEmpty">Está vacío</SelectItem>
+                              <SelectItem value="isNotEmpty">No está vacío</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {operatorNeedsValue(newConditionOperator) && (
+                          <div>
+                            <Label>Valor</Label>
+                            {getTriggerQuestionType(newConditionQuestionId) === 'select' || 
+                             getTriggerQuestionType(newConditionQuestionId) === 'radio' ||
+                             getTriggerQuestionType(newConditionQuestionId) === 'multiselect' ||
+                             getTriggerQuestionType(newConditionQuestionId) === 'checkbox' ? (
+                              // Si la pregunta trigger es de tipo select/radio/checkbox, mostramos sus opciones
+                              <Select
+                                value={newConditionValue}
+                                onValueChange={setNewConditionValue}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Seleccionar valor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {availableQuestions
+                                    .find(q => q.id === newConditionQuestionId)
+                                    ?.options?.map(option => (
+                                      <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                             ) : (
+                              // Para otros tipos, mostramos un input
+                              <Input
+                                value={newConditionValue}
+                                onChange={(e) => setNewConditionValue(e.target.value)}
+                                placeholder="Valor para comparar"
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <Button
+                        onClick={handleAddCondition}
+                        className="mt-3"
+                        variant="outline"
+                        size="sm"
+                        disabled={!newConditionQuestionId || (operatorNeedsValue(newConditionOperator) && !newConditionValue)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Añadir Condición
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             </ScrollArea>
           </TabsContent>
