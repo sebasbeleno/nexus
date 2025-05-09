@@ -5,7 +5,8 @@
     "paths": {
       "@/*": ["./*"],
       "@workspace/ui/*": ["../../packages/ui/src/*"],
-      "@workspace/types": ["../../packages/types/src"]
+      "@workspace/types": ["../../packages/types/src"],
+      "@workspace/db/*": ["../../packages/db/src/*"]
     },
     "plugins": [
       {
