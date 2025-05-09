@@ -1,5 +1,5 @@
 {
-  "name": "shadcn-ui-monorepo",
+  "name": "nexus",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -13,6 +13,7 @@
     "@workspace/typescript-config": "workspace:*",
     "@workspace/ui": "workspace:*",
     "@workspace/types": "workspace:*",
+    "@workspace/db": "workspace:*",
     "prettier": "^3.5.1",
     "turbo": "^2.4.2",
     "typescript": "5.7.3"

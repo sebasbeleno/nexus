@@ -41,7 +41,6 @@ toast.success('Success message', {
 });
 ```
 
-
 State Management and Data Fetching
 
 - Use Redux Toolkit for state management.
@@ -79,6 +78,8 @@ Backend and Database
 - Use Supabase for backend services, including authentication and database interactions.
 - Follow Supabase guidelines for security and performance.
 - Use Zod schemas to validate data exchanged with the backend.
+- All the database queries should be done using the Supabase client.
+- Write all the queries in the `packages/api` directory.
 
 Testing and Quality Assurance
 
