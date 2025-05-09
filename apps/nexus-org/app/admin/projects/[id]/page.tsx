@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Edit, Loader2 } from 'lucide-react';
 import { Button } from '@workspace/ui/components/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@workspace/ui/components/card';
 import { Badge } from '@workspace/ui/components/badge';
 import { Alert, AlertDescription, AlertTitle } from '@workspace/ui/components/alert';
 import { Separator } from '@workspace/ui/components/separator';
@@ -13,6 +12,8 @@ import { createClient } from '@/utils/supabase/client';
 import { getProjectById } from '@workspace/db/src/queries/projects';
 import { Tables } from '@workspace/db/src/types';
 import { toast } from 'sonner';
+import { ProjectDetails } from './components/project-details';
+import { ProjectSurveys } from './components/project-surveys';
 
 type ProjectRow = Tables<'projects'>;
 
@@ -46,16 +47,6 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
     
     fetchProject();
   }, [params.id]);
-
-  // Helper function to format dates
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "No establecido";
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
 
   // Determine status label and color
   const getStatusDisplay = (status: string) => {
@@ -138,59 +129,11 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
         </TabsList>
         
         <TabsContent value="details" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Información del proyecto</CardTitle>
-              <CardDescription>Detalles básicos sobre este proyecto</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Description */}
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">Descripción</h3>
-                <p>{project.description || "Sin descripción"}</p>
-              </div>
-              
-              {/* Project Dates */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Fecha de Inicio</h3>
-                  <p>{formatDate(project.start_date)}</p>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Fecha de Finalización</h3>
-                  <p>{formatDate(project.end_date)}</p>
-                </div>
-              </div>
-              
-              {/* Creation Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Creado el</h3>
-                  <p>{formatDate(project.created_at)}</p>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium text-muted-foreground">Última Actualización</h3>
-                  <p>{formatDate(project.updated_at)}</p>
-                </div>
-              </div>
-              
-              {/* Additional metadata could be displayed here */}
-            </CardContent>
-          </Card>
+          <ProjectDetails project={project} />
         </TabsContent>
         
         <TabsContent value="surveys">
-          <Card>
-            <CardHeader>
-              <CardTitle>Encuestas</CardTitle>
-              <CardDescription>Encuestas asociadas a este proyecto</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Funcionalidad para gestionar encuestas en desarrollo.
-              </p>
-            </CardContent>
-          </Card>
+          <ProjectSurveys projectId={project.id} />
         </TabsContent>
       </Tabs>
     </div>
