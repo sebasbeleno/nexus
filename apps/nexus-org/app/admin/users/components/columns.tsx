@@ -35,7 +35,16 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => {
       const firstName = row.getValue("first_name") as string
       const lastName = row.getValue("last_name") as string
-      return <div>{firstName} {lastName}</div>
+      const userId = row.original.id
+      
+      return (
+        <a 
+          href={`/admin/users/${userId}`} 
+          className="hover:underline text-primary font-medium cursor-pointer"
+        >
+          {firstName} {lastName}
+        </a>
+      )
     },
   },
   {
