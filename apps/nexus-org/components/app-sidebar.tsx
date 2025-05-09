@@ -2,21 +2,15 @@
 
 import * as React from "react"
 import {
-  Bot,
   Frame,
   GalleryVerticalEnd,
   SquareTerminal,
   Users,
-  Settings,
-  LayoutDashboard, // Added
-  ClipboardList, // Added
-  BarChart2, // Added
-  Building, // Added
+  LayoutDashboard
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import {
@@ -63,42 +57,39 @@ export function AppSidebar({ isAdmin = false, ...props }: AppSidebarProps & Reac
       url: "/admin",
       icon: LayoutDashboard,
       isActive: pathname === "/admin",
+      items: [
+        {
+          title: "Inicio",
+          url: "/admin",
+          isActive: pathname === "/admin",
+        },
+      ],
     },
     {
       title: "Proyectos",
       url: "/admin/projects",
       icon: Frame,
       isActive: pathname?.startsWith("/admin/projects"),
-    },
-    {
-      title: "Encuestas",
-      url: "/admin/surveys",
-      icon: ClipboardList,
-      isActive: pathname?.startsWith("/admin/surveys"),
-    },
-    {
-      title: "Analíticas",
-      url: "/admin/analytics",
-      icon: BarChart2,
-      isActive: pathname?.startsWith("/admin/analytics"),
+      items: [
+        {
+          title: "Projectos",
+          url: "/admin/projects",
+          isActive: pathname === "/admin/projects",
+        },
+      ],
     },
     {
       title: "Usuarios",
       url: "/admin/users",
       icon: Users,
       isActive: pathname?.startsWith("/admin/users"),
-    },
-    {
-      title: "Organizaciones",
-      url: "/admin/organizations",
-      icon: Building,
-      isActive: pathname?.startsWith("/admin/organizations"),
-    },
-    {
-      title: "Configuración",
-      url: "/admin/settings",
-      icon: Settings,
-      isActive: pathname?.startsWith("/admin/settings"),
+      items: [
+        {
+          title: "Usuarios",
+          url: "/admin/users",
+          isActive: pathname === "/admin/users",
+        },
+      ],
     },
   ]
 
