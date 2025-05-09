@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { DataTable } from '@/components/data-table';
-import { columns } from './columns';
-import { CreateUserDialog } from './create-user-dialog';
+import { columns } from './components/columns';
 import { toast } from 'sonner';
 import { getActiveProfilesByOrganization } from '@workspace/db/src/queries/profiles';
 import { Button } from '@workspace/ui/components/button';
