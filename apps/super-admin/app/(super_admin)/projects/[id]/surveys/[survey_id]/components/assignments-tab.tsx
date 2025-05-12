@@ -1,71 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { Button } from "@workspace/ui/components/button";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
-} from "@workspace/ui/components/card";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@workspace/ui/components/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@workspace/ui/components/form";
-import { Calendar } from "@workspace/ui/components/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@workspace/ui/components/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@workspace/ui/components/select";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@workspace/ui/components/dropdown-menu";
-import { 
-  ColumnDef, 
-  ColumnFiltersState,
-} from "@tanstack/react-table";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { 
-  CalendarIcon, 
-  PlusCircle, 
-  AlertCircle,
-  MoreHorizontalIcon,
-  EyeIcon,
-  PlayIcon,
-  CheckIcon,
-  XCircleIcon,
-  RefreshCwIcon
-} from "lucide-react";
-import { cn } from "@workspace/ui/lib/utils";
-import { DataTable } from "@/components/data-table";
-import { Badge } from "@workspace/ui/components/badge";
 import { toast } from "sonner";
 import { 
   assignSurvey, 
@@ -73,6 +10,11 @@ import {
   updateAssignmentStatus 
 } from "@workspace/db/src/queries/surveys";
 import { getProfilesByRole } from "@workspace/db/src/queries/profiles";
+
+// Components
+import { AssignmentsTable, Assignment } from "./assignments-table";
+import { AssignmentStatsCard } from "./assignment-stats-card";
+import { CreateAssignmentDialog } from "./create-assignment-dialog";
 import { AssignmentDetailsDialog } from "./assignment-details-dialog";
 
 // Types
@@ -91,31 +33,11 @@ interface AssignmentsTabProps {
   projectId: string;
 }
 
-// Define interfaces for data
-interface PropertyDisplay {
-  id: string;
-  name: string;
-}
-
 type Surveyor = {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
-};
-
-type Assignment = {
-  id: string;
-  survey_id: string;
-  surveyor_user_id: string;
-  property_id: string | null;
-  survey_version: number;
-  due_date: string | null;
-  assigned_at: string;
-  cancelled_at: string | null;
-  status: 'assigned' | 'in_progress' | 'in_review' | 'approved' | 'rejected' | 'cancelled' | 'completed' | 'overdue';
-  surveyor: Surveyor | null;
-  property: PropertyDisplay | null;
 };
 
 // Validation schema for assignment form
@@ -205,142 +127,6 @@ export function AssignmentsTab({ survey, properties, projectId }: AssignmentsTab
       });
     }
   };
-  
-  // Handle assignment cancellation
-  const handleCancelAssignment = async (assignmentId: string) => {
-    await handleStatusChange(assignmentId, 'cancelled');
-  };
-
-  // Status badge component for displaying assignment status
-  function StatusBadge({ status }: { status: Assignment['status'] }) {
-    const statusConfig = {
-      assigned: { label: "Asignada", variant: "outline" as const },
-      in_progress: { label: "En progreso", variant: "secondary" as const },
-      in_review: { label: "En revisión", variant: "secondary" as const },
-      approved: { label: "Aprobada", variant: "secondary" as const },
-      rejected: { label: "Rechazada", variant: "destructive" as const },
-      cancelled: { label: "Cancelada", variant: "destructive" as const },
-      completed: { label: "Completada", variant: "secondary" as const },
-      overdue: { label: "Vencida", variant: "destructive" as const },
-    };
-
-    const config = statusConfig[status];
-    
-    return (
-      <Badge variant={config.variant}>{config.label}</Badge>
-    );
-  }
-
-  // Form setup
-  const form = useForm<z.infer<typeof assignmentSchema>>({
-    resolver: zodResolver(assignmentSchema),
-    defaultValues: {
-      surveyorId: "",
-      propertyId: null,
-      dueDate: null,
-    },
-  });
-
-  // Columns for assignments data table
-  const columns: ColumnDef<Assignment>[] = useMemo(() => [
-    {
-      accessorKey: "surveyor",
-      header: "Encuestador",
-      cell: ({ row }) => {
-        const surveyor = row.original.surveyor;
-        return surveyor ? `${surveyor.first_name} ${surveyor.last_name}` : "N/A";
-      },
-    },
-    {
-      accessorKey: "property",
-      header: "Propiedad",
-      cell: ({ row }) => {
-        const property = row.original.property;
-        return property ? property.name : "N/A";
-      },
-    },
-    {
-      accessorKey: "survey_version",
-      header: "Versión",
-      cell: ({ row }) => row.getValue("survey_version"),
-    },
-    {
-      accessorKey: "assigned_at",
-      header: "Fecha de asignación",
-      cell: ({ row }) => {
-        const date = row.original.assigned_at;
-        return date ? format(new Date(date), "dd/MM/yyyy", { locale: es }) : "N/A";
-      },
-    },
-    {
-      accessorKey: "due_date",
-      header: "Fecha límite",
-      cell: ({ row }) => {
-        const date = row.original.due_date;
-        return date ? format(new Date(date), "dd/MM/yyyy", { locale: es }) : "N/A";
-      },
-    },
-    {
-      accessorKey: "status",
-      header: "Estado",
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
-    },
-    {
-      id: "actions",
-      header: "Acciones",
-      cell: ({ row }) => {
-        const assignment = row.original;
-        
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                <MoreHorizontalIcon className="h-4 w-4" />
-                <span className="sr-only">Abrir menú</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[160px]">
-              <DropdownMenuItem onClick={() => handleViewDetails(assignment)}>
-                <EyeIcon className="mr-2 h-4 w-4" />
-                Ver detalles
-              </DropdownMenuItem>
-              
-              {assignment.status === 'assigned' && (
-                <DropdownMenuItem onClick={() => handleStatusChange(assignment.id, 'in_progress')}>
-                  <PlayIcon className="mr-2 h-4 w-4" />
-                  Marcar en progreso
-                </DropdownMenuItem>
-              )}
-              
-              {(assignment.status === 'assigned' || assignment.status === 'in_progress') && (
-                <DropdownMenuItem onClick={() => handleStatusChange(assignment.id, 'completed')}>
-                  <CheckIcon className="mr-2 h-4 w-4" />
-                  Marcar como completada
-                </DropdownMenuItem>
-              )}
-              
-              {(['assigned', 'in_progress', 'overdue'].includes(assignment.status)) && (
-                <DropdownMenuItem 
-                  onClick={() => handleStatusChange(assignment.id, 'cancelled')}
-                  className="text-destructive focus:text-destructive"
-                >
-                  <XCircleIcon className="mr-2 h-4 w-4" />
-                  Cancelar asignación
-                </DropdownMenuItem>
-              )}
-              
-              {(['cancelled', 'completed'].includes(assignment.status)) && (
-                <DropdownMenuItem onClick={() => handleStatusChange(assignment.id, 'assigned')}>
-                  <RefreshCwIcon className="mr-2 h-4 w-4" />
-                  Reactivar asignación
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
-  ], []);
 
   // Fetch assignments and surveyors
   useEffect(() => {
@@ -427,7 +213,7 @@ export function AssignmentsTab({ survey, properties, projectId }: AssignmentsTab
   }, [survey.id, properties, supabase]);
   
   // Handle assignment creation
-  const onSubmit = async (values: z.infer<typeof assignmentSchema>) => {
+  const handleCreateAssignment = async (values: z.infer<typeof assignmentSchema>) => {
     try {
       // Handle the special case for "no_property" value
       const propertyId = values.propertyId === "no_property" ? null : values.propertyId;
@@ -491,8 +277,6 @@ export function AssignmentsTab({ survey, properties, projectId }: AssignmentsTab
         setAssignments(enhancedAssignments);
       }
       
-      // Reset form and close dialog
-      form.reset();
       setOpenDialog(false);
     } catch (err: any) {
       console.error("Error assigning survey:", err);
@@ -502,19 +286,6 @@ export function AssignmentsTab({ survey, properties, projectId }: AssignmentsTab
     }
   };
   
-  // Calculate statistics for assignments
-  const assignmentStats = useMemo(() => {
-    const stats = {
-      total: assignments.length,
-      pending: assignments.filter(a => a.status === 'assigned').length,
-      inProgress: assignments.filter(a => a.status === 'in_progress').length,
-      completed: assignments.filter(a => a.status === 'completed').length,
-      overdue: assignments.filter(a => a.status === 'overdue').length,
-      cancelled: assignments.filter(a => a.status === 'cancelled').length
-    };
-    return stats;
-  }, [assignments]);
-  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -522,215 +293,27 @@ export function AssignmentsTab({ survey, properties, projectId }: AssignmentsTab
       </div>
       
       <div className="flex justify-end">
-        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Nueva Asignación
-            </Button>
-          </DialogTrigger>
-          
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Asignar Encuesta</DialogTitle>
-              <DialogDescription>
-                Asigne la encuesta "{survey.name || survey.id}" a un encuestador.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="surveyorId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Encuestador</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar encuestador" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {surveyors.length > 0 ? (
-                            surveyors.map((surveyor) => (
-                              <SelectItem key={surveyor.id} value={surveyor.id}>
-                                {surveyor.first_name} {surveyor.last_name}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="none" disabled>
-                              No hay encuestadores disponibles
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        El encuestador que realizará la encuesta
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="propertyId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Propiedad (Opcional)</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value || ""}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar propiedad (opcional)" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="no_property">Sin propiedad específica</SelectItem>
-                          {properties.length > 0 ? (
-                            properties.map((property) => (
-                              <SelectItem key={property.id} value={property.id}>
-                                {property.name || `Propiedad ${property.id}`}
-                              </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="none" disabled>
-                              No hay propiedades disponibles
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Relaciona la asignación con una propiedad específica (opcional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="dueDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Fecha límite (Opcional)</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP", { locale: es })
-                              ) : (
-                                <span>Seleccionar fecha</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value || undefined}
-                            onSelect={field.onChange}
-                            initialFocus
-                            locale={es}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormDescription>
-                        Fecha límite para completar la encuesta (opcional)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <AlertCircle className="h-4 w-4" />
-                  <p>La encuesta se asignará con la versión actual ({survey.version})</p>
-                </div>
-
-                <DialogFooter>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setOpenDialog(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button type="submit">Asignar</Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+        <CreateAssignmentDialog
+          survey={survey}
+          properties={properties}
+          surveyors={surveyors}
+          open={openDialog}
+          onOpenChange={setOpenDialog}
+          onSubmit={handleCreateAssignment}
+        />
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Assignments stats card */}
-        <Card className="md:col-span-1">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">Estadísticas de Asignaciones</CardTitle>
-          </CardHeader>
-          <CardContent className="pb-2">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total:</span>
-                <span className="font-medium">{assignmentStats.total}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Pendientes:</span>
-                <span className="font-medium">{assignmentStats.pending}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">En progreso:</span>
-                <span className="font-medium">{assignmentStats.inProgress}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Completadas:</span>
-                <span className="font-medium">{assignmentStats.completed}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Vencidas:</span>
-                <span className="font-medium">{assignmentStats.overdue}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Canceladas:</span>
-                <span className="font-medium">{assignmentStats.cancelled}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <AssignmentStatsCard assignments={assignments} />
         
         {/* Assignments table */}
-        <Card className="md:col-span-3">
-          <CardHeader>
-            <CardTitle>Listado de Asignaciones</CardTitle>
-            <CardDescription>
-              Gestione las asignaciones de encuestas a encuestadores
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <DataTable
-              columns={columns}
-              data={assignments}
-              isLoading={isLoading}
-            />
-          </CardContent>
-        </Card>
+        <AssignmentsTable 
+          assignments={assignments}
+          isLoading={isLoading}
+          onViewDetails={handleViewDetails}
+          onStatusChange={handleStatusChange}
+        />
       </div>
       
       {/* Assignment details dialog */}
