@@ -6,6 +6,7 @@ import { OverviewTab } from "./overview-tab";
 import { StructureTab } from "./structure-tab";
 import { PropertiesTab } from "./properties-tab";
 import { ResponsesTab } from "./responses-tab";
+import { AssignmentsTab } from "./assignments-tab";
 
 interface SurveyTabsProps {
   survey: Survey;
@@ -20,6 +21,7 @@ export function SurveyTabs({ survey, properties, responses, projectId }: SurveyT
       <TabsList>
         <TabsTrigger value="overview">Resumen</TabsTrigger>
         <TabsTrigger value="structure">Estructura</TabsTrigger>
+        <TabsTrigger value="assignments">Asignaciones</TabsTrigger>
         <TabsTrigger value="properties">Propiedades</TabsTrigger>
         <TabsTrigger value="responses">Respuestas</TabsTrigger>
       </TabsList>
@@ -32,6 +34,11 @@ export function SurveyTabs({ survey, properties, responses, projectId }: SurveyT
       {/* Structure Tab */}
       <TabsContent value="structure">
         <StructureTab survey={survey} projectId={projectId} />
+      </TabsContent>
+
+      {/* Assignments Tab */}
+      <TabsContent value="assignments">
+        <AssignmentsTab survey={survey} properties={properties} projectId={projectId} />
       </TabsContent>
 
       {/* Properties Tab */}

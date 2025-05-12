@@ -8,6 +8,10 @@ import { SurveyHeader } from "./components/survey-header";
 import { SurveyTabs } from "./components/survey-tabs";
 import { LoadingState } from "./components/loading-state";
 import { ErrorState } from "./components/error-state";
+import {
+  getSurveyById,
+  getResponsesBySurvey,
+} from "@workspace/db/src/queries/surveys";
 
 export default function SurveyPage({ params }: { params: Promise<{ id: string; survey_id: string }> }) {
   const { id: projectId, survey_id } = use(params);
@@ -24,17 +28,28 @@ export default function SurveyPage({ params }: { params: Promise<{ id: string; s
     setIsLoading(true);
     setError(null);
     try {
-      // Fetch survey details
-      const { data: surveyData, error: surveyError } = await supabase
-        .from('surveys')
-        .select('*')
-        .eq('id', survey_id)
-        .single();
+      // Fetch survey details using the query function from db package
+      const { data: surveyData, error: surveyError } = await getSurveyById(
+        supabase,
+        survey_id
+      );
 
       if (surveyError) throw surveyError;
       if (!surveyData) throw new Error('Encuesta no encontrada');
 
-      setSurvey(surveyData);
+      // Map database survey data to Survey type
+      setSurvey({
+        id: surveyData.id,
+        title: surveyData.name,
+        description: surveyData.description || "",
+        version: surveyData.version,
+        structure: surveyData.structure as Record<string, any>,
+        created_at: surveyData.created_at,
+        updated_at: surveyData.updated_at,
+        project_id: surveyData.project_id,
+        deadline: surveyData.deadline,
+        metadata: surveyData.metadata as Record<string, any>,
+      } as unknown as Survey);
 
       // Fetch properties associated with the project
       const { data: propertiesData, error: propertiesError } = await supabase
@@ -46,13 +61,26 @@ export default function SurveyPage({ params }: { params: Promise<{ id: string; s
       setProperties(propertiesData || []);
 
       // Fetch survey responses
-      const { data: responsesData, error: responsesError } = await supabase
-        .from('survey_responses')
-        .select('*')
-        .eq('assignment_id', survey_id);
+      const { data: responsesData, error: responsesError } = await getResponsesBySurvey(
+        supabase,
+        survey_id
+      );
 
       if (responsesError) throw responsesError;
-      setResponses(responsesData || []);
+      
+      // Map database response data to SurveyResponse type
+      const mappedResponses = (responsesData || []).map(item => ({
+        id: item.id,
+        assignment_id: item.assignment_id,
+        submitted_at: item.submitted_at,
+        location_submitted: item.location_submitted,
+        surveyor_notes: item.surveyor_notes || "",
+        responses: item.responses as Record<string, any>,
+        metadata: item.metadata as Record<string, any>,
+        assignment: item.assignment,
+      } as SurveyResponse));
+      
+      setResponses(mappedResponses);
 
     } catch (err: any) {
       console.error("Failed to fetch survey data:", err);
