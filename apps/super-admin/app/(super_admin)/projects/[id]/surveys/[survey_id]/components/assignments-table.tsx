@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
-import { format } from "date-fns";
+import { useMemo, useState } from "react";
+import { addDays, format, isValid, parse } from "date-fns";
 import { es } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import { 
   Card, 
   CardContent, 
@@ -12,12 +13,27 @@ import {
 } from "@workspace/ui/components/card";
 import { Button } from "@workspace/ui/components/button";
 import { Badge } from "@workspace/ui/components/badge";
+import { Calendar } from "@workspace/ui/components/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@workspace/ui/components/popover";
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@workspace/ui/components/select";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/data-table";
 import { 
@@ -26,7 +42,10 @@ import {
   PlayIcon,
   CheckIcon,
   XCircleIcon,
-  RefreshCwIcon
+  RefreshCwIcon,
+  FilterIcon,
+  XIcon,
+  CalendarIcon
 } from "lucide-react";
 
 // Types
@@ -89,6 +108,10 @@ export function AssignmentsTable({
   onViewDetails, 
   onStatusChange 
 }: AssignmentsTableProps) {
+  const [filter, setFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<Assignment['status'] | "">("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+
   // Columns for assignments data table
   const columns: ColumnDef<Assignment>[] = useMemo(() => [
     {
@@ -190,6 +213,25 @@ export function AssignmentsTable({
     },
   ], [onViewDetails, onStatusChange]);
 
+  // Filtered assignments based on filter state
+  const filteredAssignments = useMemo(() => {
+    return assignments.filter((assignment) => {
+      const matchesName = assignment.surveyor?.first_name.toLowerCase().includes(filter.toLowerCase()) || 
+                          assignment.surveyor?.last_name.toLowerCase().includes(filter.toLowerCase()) ||
+                          assignment.property?.name.toLowerCase().includes(filter.toLowerCase());
+
+      const matchesStatus = statusFilter ? assignment.status === statusFilter : true;
+
+      const matchesDateRange = dateRange?.from ? 
+        (assignment.assigned_at && isValid(new Date(assignment.assigned_at))) &&
+        new Date(assignment.assigned_at) >= dateRange.from && 
+        (!dateRange.to || !assignment.due_date || new Date(assignment.due_date) <= dateRange.to)
+        : true;
+
+      return matchesName && matchesStatus && matchesDateRange;
+    });
+  }, [assignments, filter, statusFilter, dateRange]);
+
   return (
     <Card className="md:col-span-3">
       <CardHeader>
@@ -199,9 +241,138 @@ export function AssignmentsTable({
         </CardDescription>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 flex flex-col gap-4 md:flex-row items-center">
+          <div className="flex-1">
+            <div className="flex justify-between">
+              <Label htmlFor="filter">Filtrar por nombre de encuestador o propiedad</Label>
+              {filter && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-5 text-xs px-2"
+                  onClick={() => setFilter("")}
+                >
+                  Limpiar
+                </Button>
+              )}
+            </div>
+            <div className="relative">
+              <Input 
+                id="filter" 
+                placeholder="Buscar..." 
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="pl-8"
+              />
+              <div className="absolute left-2 top-2.5 text-muted-foreground">
+                <FilterIcon className="h-4 w-4" />
+              </div>
+              {filter && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute right-1 top-1.5 h-6 w-6"
+                  onClick={() => setFilter("")}
+                >
+                  <XIcon className="h-3 w-3" />
+                  <span className="sr-only">Limpiar filtro</span>
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="flex-1">
+            <div className="flex justify-between">
+              <Label>Filtrar por estado</Label>
+              {statusFilter && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-5 text-xs px-2"
+                  onClick={() => setStatusFilter("")}
+                >
+                  Limpiar
+                </Button>
+              )}
+            </div>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value as Assignment['status'])}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccione un estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="assigned">Asignada</SelectItem>
+                <SelectItem value="in_progress">En progreso</SelectItem>
+                <SelectItem value="in_review">En revisión</SelectItem>
+                <SelectItem value="approved">Aprobada</SelectItem>
+                <SelectItem value="rejected">Rechazada</SelectItem>
+                <SelectItem value="cancelled">Cancelada</SelectItem>
+                <SelectItem value="completed">Completada</SelectItem>
+                <SelectItem value="overdue">Vencida</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex-1">
+            <div className="flex justify-between">
+              <Label>Filtrar por fecha</Label>
+              {dateRange && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-5 text-xs px-2"
+                  onClick={() => setDateRange(undefined)}
+                >
+                  Limpiar
+                </Button>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="date"
+                    variant="outline"
+                    className={`w-full justify-start text-left font-normal ${!dateRange && "text-muted-foreground"}`}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "dd/MM/yyyy", { locale: es })} -{" "}
+                          {format(dateRange.to, "dd/MM/yyyy", { locale: es })}
+                        </>
+                      ) : (
+                        format(dateRange.from, "dd/MM/yyyy", { locale: es })
+                      )
+                    ) : (
+                      <span>Seleccione un rango de fechas</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    locale={es}
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        </div>
+        {(filter || statusFilter || dateRange) && (
+          <div className="mb-2 text-sm text-muted-foreground">
+            Mostrando {filteredAssignments.length} de {assignments.length} asignaciones
+          </div>
+        )}
         <DataTable
           columns={columns}
-          data={assignments}
+          data={filteredAssignments}
           isLoading={isLoading}
         />
       </CardContent>
