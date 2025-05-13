@@ -3,11 +3,12 @@
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@workspace/ui/components/button";
-import { ArrowLeft, Save, Settings } from "lucide-react";
+import { ArrowLeft, Eye, Pencil, Save, Settings } from "lucide-react";
 import { SectionList } from "@/components/survey-builder/section-list";
 import { QuestionTypeCard } from "@/components/survey-builder/question-type-card";
 import { SectionEditor } from "@/components/survey-builder/section-editor";
 import { SectionSettingsDialog } from "@/components/survey-builder/section-settings-dialog";
+import { SurveyPreviewContainer } from "@/components/survey-builder/survey-preview-container";
 import { useSurveyStore } from "./store";
 import { QuestionType, SurveyStructure } from "@workspace/types";
 import { createClient } from "@/utils/supabase/client";
@@ -23,6 +24,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const supabase = createClient();
 
   // Load survey data from Supabase
@@ -152,19 +154,41 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     }
   };
 
+  const handleTogglePreviewMode = () => {
+    setIsPreviewMode(!isPreviewMode);
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <Link href={`/projects/${projectId}/surveys/${survey_id}`}>
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-2 w-4 h-4" /> Volver a la Encuesta
+          <div className="flex items-center gap-2">
+            <Link href={`/projects/${projectId}/surveys/${survey_id}`}>
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="mr-2 w-4 h-4" /> Volver a la Encuesta
+              </Button>
+            </Link>
+            <Button
+              variant={isPreviewMode ? "outline" : "secondary"}
+              size="sm"
+              onClick={handleTogglePreviewMode}
+              disabled={isLoading || survey.sections.length === 0}
+            >
+              {isPreviewMode ? (
+                <>
+                  <Pencil className="mr-2 w-4 h-4" /> Modo Edición
+                </>
+              ) : (
+                <>
+                  <Eye className="mr-2 w-4 h-4" /> Vista Previa
+                </>
+              )}
             </Button>
-          </Link>
+          </div>
           <Button 
             onClick={handleSaveChanges}
-            disabled={isSaving || isLoading}
+            disabled={isSaving || isLoading || isPreviewMode}
           >
             <Save className="mr-2 w-4 h-4" /> {isSaving ? 'Guardando...' : 'Guardar Cambios'}
           </Button>
@@ -202,27 +226,52 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
       
       {!isLoading && !loadError && (
         <>
-          {/* Main Grid Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {/* Left Sidebar */}
-            <div className="md:col-span-1 space-y-6">
-              <SectionList 
-                onSelectSection={setSelectedSectionId}
-                selectedSectionId={selectedSectionId}
-                onSectionSettings={handleSectionSettings}
-              />
-              <QuestionTypeCard onSelect={handleQuestionTypeSelect} />
+          {isPreviewMode ? (
+            <div className="flex justify-center">
+              <div className="w-full max-w-3xl">
+                <SurveyPreviewContainer 
+                  survey={survey} 
+                  onClose={handleTogglePreviewMode} 
+                />
+              </div>
             </div>
-
-            {/* Right Content Area */}
-            <div className="md:col-span-2 lg:col-span-3">
-              <SectionEditor sectionId={selectedSectionId} />
+          ) : (
+            /* Main Grid Layout */
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {/* Left Sidebar - Section List */}
+              <div className="col-span-1">
+                <SectionList
+                  onSelectSection={setSelectedSectionId}
+                  selectedSectionId={selectedSectionId}
+                  onSectionSettings={handleSectionSettings}
+                />
+              </div>
+              
+              {/* Main Content Area */}
+              <div className="col-span-1 md:col-span-2">
+                {selectedSectionId ? (
+                  <SectionEditor sectionId={selectedSectionId} />
+                ) : (
+                  <div className="h-full flex items-center justify-center border-2 border-dashed rounded-lg p-6">
+                    <div className="text-center">
+                      <p className="text-muted-foreground mb-4">Seleccione una sección para editar o cree una nueva</p>
+                      <Button onClick={() => addQuestion(selectedSectionId!, 'text')} disabled={!selectedSectionId}>
+                        Añadir Pregunta
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Right Sidebar - Question Types */}
+              <div className="col-span-1">
+                <QuestionTypeCard onSelect={handleQuestionTypeSelect} />
+              </div>
             </div>
-          </div>
+          )}
         </>
       )}
 
-      {/* Section Settings Dialog */}
       <SectionSettingsDialog
         sectionId={selectedSectionId}
         isOpen={isSectionSettingsOpen}
