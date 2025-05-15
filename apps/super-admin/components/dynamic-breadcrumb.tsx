@@ -73,7 +73,7 @@ export function DynamicBreadcrumb() {
                 {isLastSegment ? (
                   <BreadcrumbPage>{title}</BreadcrumbPage>
                 ) : (
-                  <BreadcrumbLink href={href} as={Link}>
+                  <BreadcrumbLink href={href}>
                     {title}
                   </BreadcrumbLink>
                 )}
