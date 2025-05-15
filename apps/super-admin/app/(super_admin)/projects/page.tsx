@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@workspace/ui/components/button";
 import { Loader2, AlertCircle, Info } from "lucide-react";
 import { useFetchProjects } from "@/hooks/use-fetch-projects";
@@ -11,7 +10,6 @@ import { ProjectCard } from "@/components/project-card";
 
 
 export default function ProjectsPage() {
-  const router = useRouter();
   const { projects, isLoading, error, refetch } = useFetchProjects();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 

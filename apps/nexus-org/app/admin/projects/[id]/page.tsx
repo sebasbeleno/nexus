@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Edit, Loader2 } from 'lucide-react';
 import { Button } from '@workspace/ui/components/button';
@@ -17,7 +17,8 @@ import { ProjectSurveys } from './components/project-surveys';
 
 type ProjectRow = Tables<'projects'>;
 
-export default function ProjectDetailsPage({ params }: { params: { id: string } }) {
+export default function ProjectDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const {id} = use(params);
   const router = useRouter();
   const [project, setProject] = useState<ProjectRow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +31,7 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
         setError(null);
         
         const supabase = createClient();
-        const { data, error } = await getProjectById(supabase, params.id);
+        const { data, error } = await getProjectById(supabase, id);
         
         if (error) throw error;
         if (!data) throw new Error('Proyecto no encontrado');
@@ -46,7 +47,7 @@ export default function ProjectDetailsPage({ params }: { params: { id: string } 
     };
     
     fetchProject();
-  }, [params.id]);
+  }, [id]);
 
   // Determine status label and color
   const getStatusDisplay = (status: string) => {

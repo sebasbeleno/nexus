@@ -2,8 +2,8 @@
 
 import { Button } from "@workspace/ui/components/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@workspace/ui/components/card";
-import { Section, Question, SurveyStructure } from "@workspace/types";
-import { ArrowLeft, Download, Share2 } from "lucide-react";
+import { Question, SurveyStructure } from "@workspace/types";
+import { ArrowLeft, Download } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@workspace/ui/lib/utils";

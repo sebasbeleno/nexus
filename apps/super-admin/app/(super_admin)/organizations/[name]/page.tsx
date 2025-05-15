@@ -7,13 +7,15 @@ import { GeneralTab } from "./components/general-tab";
 import { ActivityLogTab } from "./components/activity-log-tab";
 import { SettingsTab } from "./components/settings-tab";
 import { ProjectsTab } from "./components/projects-tab";
+import { use } from "react";
 
 export default async function OrganizationDetailsPage({ 
   params 
 }: { 
-  params: { name: string } 
+  params: Promise<{ name: string }>
 }) {
-  const organizationName = decodeURIComponent(params.name);
+  const { name } = use(params);
+  const organizationName = decodeURIComponent(name);
   const supabase = await createClient();
   
   // Verify user authentication

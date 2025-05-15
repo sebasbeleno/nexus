@@ -74,7 +74,7 @@ export default function AdminUsersPage() {
         role: user.role || '',
         created_at: user.created_at ? new Date(user.created_at).toISOString().split('T')[0] : '',
         last_login: user.last_login ? new Date(user.last_login).toISOString() : null
-      }));
+      })) as User[];
       
       setUsers(formattedUsers);
       setFilteredUsers(formattedUsers);
@@ -154,7 +154,6 @@ export default function AdminUsersPage() {
       <DataTable 
         columns={columns} 
         data={filteredUsers} 
-        isLoading={isLoading} 
       />
     </div>
   );

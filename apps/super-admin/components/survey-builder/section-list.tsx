@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@workspace/ui/components/card";
 import { Button } from "@workspace/ui/components/button";
 import { PlusCircle, Settings } from "lucide-react";
 import { useSurveyStore } from "../../app/(super_admin)/projects/[id]/surveys/[survey_id]/edit/store";
-import { Section } from "@workspace/types";
 import { cn } from "@workspace/ui/lib/utils";
 
 interface SectionListProps {

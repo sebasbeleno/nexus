@@ -24,11 +24,11 @@ import {
 import { useSurveyStore } from "../../app/(super_admin)/projects/[id]/surveys/[survey_id]/edit/store";
 import { Question, ValidationRule, ValidationTypes, QuestionOption, ConditionalLogic, ConditionalOperator, LogicalOperator, ConditionalLogicCondition, QuestionType } from "@workspace/types";
 import { getValidValidationTypes, getValidationDescription, validationNeedsValue, getValidationValueInputType } from "@/lib/validation-helpers";
-import { Plus, X, Trash2, Check } from "lucide-react";
+import { Plus, X, Trash2 } from "lucide-react";
 import { Badge } from "@workspace/ui/components/badge";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import { Switch } from "@workspace/ui/components/switch";
-import { getQuestionById, getConditionalOperatorDescription, operatorNeedsValue } from "@/lib/survey-helpers";
+import { getConditionalOperatorDescription, operatorNeedsValue } from "@/lib/survey-helpers";
 
 interface QuestionEditDialogProps {
   isOpen: boolean;

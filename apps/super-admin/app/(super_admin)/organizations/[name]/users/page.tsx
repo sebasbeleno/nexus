@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@workspace/ui/components/button";
 import { PlusIcon } from "lucide-react";
 import Link from "next/link";
+import { use } from "react";
 
 type User = {
 	id: string;
@@ -53,15 +54,18 @@ async function getOrganizationUsers(
 		last_name: user.last_name || '',
 		is_active: user.is_active || false,
 		role: user.role || 'user',
-		created_at: new Date(user.created_at).toISOString().split('T')[0],
-	}));
+		created_at: user.created_at
+			? new Date(user.created_at).toISOString().split('T')[0]
+			: '',
+	})) as User[];
 }
 
 export default async function OrganizationUsersPage({
 	params
 }: {
-	params: { name: string }
+	params: Promise<{ name: string }>;
 }) {
+	const { name } = use(params);
 	const supabase = await createClient();
 
 	const { data: { user } } = await supabase.auth.getUser();
@@ -69,7 +73,7 @@ export default async function OrganizationUsersPage({
 		return redirect("/");
 	}
 
-	const organization = await getOrganizationByName(supabase, params.name);
+	const organization = await getOrganizationByName(supabase, name);
 	if (!organization) {
 		return redirect("/organizations");
 	}
@@ -87,7 +91,7 @@ export default async function OrganizationUsersPage({
 						Gestiona los usuarios de esta organización
 					</p>
 				</div>
-				<Link href={`/organizations/${params.name}/users/new`}>
+				<Link href={`/organizations/${name}/users/new`}>
 					<Button>
 						<PlusIcon className="mr-2 h-4 w-4" />
 						Añadir Usuario

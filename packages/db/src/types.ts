@@ -100,6 +100,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string
           account_locked: boolean | null
           consent_to_data_processing: boolean | null
           created_at: string | null

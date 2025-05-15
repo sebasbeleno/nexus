@@ -9,12 +9,14 @@ import GeneralTab from "./tabs/GeneralTab";
 import ActivityLogTab from "./tabs/ActivityLogTab";
 import SecurityTab from "./tabs/SecurityTab";
 import ConfigurationTab from "./tabs/ConfigurationTab";
+import { use } from "react";
 
 export default async function UserDetailsPage({
   params
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = use(params);
   const supabase = await createClient();
 
   const {
@@ -32,7 +34,7 @@ export default async function UserDetailsPage({
       *,
       organizations(name)
     `)
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (error || !userData) {
@@ -81,11 +83,11 @@ export default async function UserDetailsPage({
             </TabsContent>
             
             <TabsContent value="activity">
-              <ActivityLogTab userId={params.id} />
+              <ActivityLogTab userId={id} />
             </TabsContent>
             
             <TabsContent value="security">
-              <SecurityTab userId={params.id} userData={userData} />
+              <SecurityTab userId={id} userData={userData} />
             </TabsContent>
             
             <TabsContent value="configuration">

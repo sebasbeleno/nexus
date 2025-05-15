@@ -7,19 +7,20 @@ import { createClient } from "@/utils/supabase/client";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { InfoTab } from "./components/info-tab";
 import { ContactTab } from "./components/contact-tab";
 import { AdvancedTab } from "./components/advanced-tab";
 
-export default function EditOrganizationPage({ params }: { params: { name: string } }) {
+export default function EditOrganizationPage({ params }: { params: Promise<{ name: string }> }) {
+  const { name } = use(params);
   const [organization, setOrganization] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const router = useRouter();
-  const organizationName = decodeURIComponent(params.name);
+  const organizationName = decodeURIComponent(name);
   const supabase = createClient();
 
   // Fetch organization data

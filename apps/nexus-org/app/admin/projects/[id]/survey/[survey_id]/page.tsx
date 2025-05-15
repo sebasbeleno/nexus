@@ -108,7 +108,7 @@ export default function SurveyDetailsPage({ params }: { params: Promise<{ id: st
     const differenceInDays = Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
     
     if (differenceInDays < 0) return { label: 'Vencido', variant: 'destructive' as const };
-    if (differenceInDays <= 7) return { label: `${differenceInDays} días`, variant: 'warning' as const };
+    if (differenceInDays <= 7) return { label: `${differenceInDays} días`, variant: 'secondary' as const };
     return { label: `${differenceInDays} días`, variant: 'default' as const };
   };
 

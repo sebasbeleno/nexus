@@ -1,7 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 import type { Project } from "@workspace/types";
@@ -15,8 +14,8 @@ import { ProjectDetailsTab } from "./components/project-details-tab";
 import { ProjectSettingsTab } from "./components/project-settings-tab";
 import { SurveysTab } from "./components/project-surveys-tab";
 
-export default function ProjectPage({ params }: { params: { id: string } }) {
-  const { id: ProjectId } = params;
+export default function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: ProjectId } = use(params);
 
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,7 +23,7 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
 
   const supabase = createClient();
 
-  const fetchProjectData = React.useCallback(async () => {
+  const fetchProjectData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -39,7 +38,7 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
       if (!data) throw new Error('Project not found')
 
       setProject(data)
-    
+
 
     } catch (err: any) {
       console.error("Failed to fetch project:", err);

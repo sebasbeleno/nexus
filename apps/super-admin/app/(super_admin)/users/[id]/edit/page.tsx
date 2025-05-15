@@ -7,18 +7,18 @@ import { createClient } from "@/utils/supabase/client";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { toast } from "sonner";
 import GeneralTab from "./tabs/general-tab";
 import OrganizationTab from "./tabs/organization-tab";
 import SecurityTab from "./tabs/security-tab";
 
-export default function EditUserPage({ params }: { params: { id: string } }) {
+export default function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
+  const userId = use(params);
   const [user, setUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
-  const userId = params.id;
   const supabase = createClient();
 
   // Fetch user data

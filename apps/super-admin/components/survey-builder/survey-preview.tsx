@@ -6,14 +6,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@workspace
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select";
-import { Textarea } from "@workspace/ui/components/textarea";
 import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group";
 import { Checkbox } from "@workspace/ui/components/checkbox";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { Section, Question, QuestionType, ValidationTypes, ConditionalLogic } from "@workspace/types";
+import { Section, Question } from "@workspace/types";
 import { toast } from "sonner";
 
 interface SurveyPreviewProps {
@@ -188,14 +187,14 @@ export function SurveyPreview({ sections, onComplete }: SurveyPreviewProps) {
   // Create form
   const currentSchema = currentSection ? generateSectionSchema(currentSection) : z.object({});
   const form = useForm<any>({
-    resolver: zodResolver(currentSchema),
+    resolver: zodResolver(currentSchema as any),
     defaultValues: responses,
   });
 
   // Update form values when section changes or responses are updated
   useEffect(() => {
     const sectionResponses = Object.keys(responses).reduce((acc, key) => {
-      const questionIds = currentSection.questions.map(q => q.id);
+      const questionIds = currentSection?.questions?.map(q => q.id) ?? [];
       if (questionIds.includes(key)) {
         acc[key] = responses[key];
       }
