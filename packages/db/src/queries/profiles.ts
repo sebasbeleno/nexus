@@ -307,7 +307,7 @@ export async function incrementFailedLoginAttempt(
     .from('profiles')
     .update({ 
       failed_login_attempts: newAttempts,
-      account_locked: shouldLock ? true : profile.account_locked,
+      account_locked: shouldLock ? true : false,
       updated_at: new Date().toISOString()
     })
     .eq('id', profile.id)
