@@ -34,7 +34,16 @@ async function getData(supabase: SupabaseClient<any, "public", any>): Promise<Or
     name: org.name,
     users: org.active_users?.[0]?.count || 0, // Use the count of active users
     status: org.status || 'Inactive',
-    created_at: new Date(org.created_at).toISOString().split('T')[0], // Format date as YYYY-MM-DD
+    created_at: new Date(org.created_at).toISOString().split('T')[0] || '', // Format date as YYYY-MM-DD
+    active_users: org.active_users?.[0]?.count || 0, // Use the count of active users
+    address: org.address || '', // Add address if available
+    contact_email: org.contact_email || '', // Add contact email if available
+    contact_phone: org.contact_phone || '', // Add contact phone if available
+    data_retention_period: org.data_retention_period || '', // Add data retention period if available
+    logo_url: org.logo_url || '', // Add logo URL if available
+    metadata: org.metadata || {}, // Add metadata if available
+    notes: org.notes || '', // Add notes if available
+    updated_at: new Date(org.updated_at).toISOString().split('T')[0] || '', // Format date as YYYY-MM-DD
   }));
 }
 
