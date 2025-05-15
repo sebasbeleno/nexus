@@ -34,20 +34,11 @@ async function getData(supabase: SupabaseClient<any, "public", any>): Promise<Or
     name: org.name,
     users: org.active_users?.[0]?.count || 0, // Use the count of active users
     status: org.status || 'Inactive',
-    created_at: new Date(org.created_at).toISOString().split('T')[0] || '', // Format date as YYYY-MM-DD
-    active_users: org.active_users || [],
-    address: org.address || '',
-    contact_email: org.contact_email || '',
-    contact_phone: org.contact_phone || '',
-    data_retention_period: org.data_retention_period || 0,
-    logo_url: org.logo_url || '',
-    metadata: org.metadata || {},
-    notes: org.notes || '',
-    updated_at: org.updated_at ? new Date(org.updated_at).toISOString() : '',
+    created_at: new Date(org.created_at).toISOString().split('T')[0], // Format date as YYYY-MM-DD
   }));
 }
 
-export default async function Dashboard({ searchParams }: { searchParams?: { search?: string } }) {
+export default async function Dashboard() {
   const supabase = await createClient()
   
   const {
@@ -59,14 +50,6 @@ export default async function Dashboard({ searchParams }: { searchParams?: { sea
   }
   
   let data = await getData(supabase);
-  
-  // Filter data based on search parameter
-  const searchTerm = searchParams?.search?.toLowerCase();
-  if (searchTerm) {
-    data = data.filter((org) => 
-      (org.name ?? '').toLowerCase().includes(searchTerm)
-    );
-  }
 
   return (
     <>
