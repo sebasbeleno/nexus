@@ -97,7 +97,7 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
     loadSurveyData();
   }, [survey_id, setSurvey, supabase]);
 
-  // Set first section as selected when survey loads or changes
+  // Handle navigation between sections
   useEffect(() => {
     if (!isLoading && survey.sections && survey.sections.length > 0 && !selectedSectionId) {
       setSelectedSectionId(survey.sections[0]?.id);
@@ -155,6 +155,11 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
   };
 
   const handleTogglePreviewMode = () => {
+    // Save current state before entering preview mode
+    if (!isPreviewMode) {
+      handleSaveChanges();
+    }
+    
     setIsPreviewMode(!isPreviewMode);
   };
 
@@ -163,16 +168,6 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
       {/* Header */}
       <div className="container mx-auto py-4 border-b">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/projects/${projectId}/surveys/${survey_id}`}
-              className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver a Encuestas
-            </Link>
-            <h1 className="text-xl font-semibold">{survey.title || "Nueva Encuesta"}</h1>
-          </div>
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
@@ -199,11 +194,30 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
       <div className="flex-1 container mx-auto relative">
         {isLoading && (
           <div className="flex justify-center items-center h-64">
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-muted-foreground animate-spin w-8 h-8 border-2 border-t-primary rounded-full"></div>
+              <p className="text-muted-foreground">Cargando encuesta...</p>
+            </div>
           </div>
         )}
         
         {!isLoading && loadError && (
           <div className="flex justify-center items-center h-64">
+            <div className="flex flex-col items-center gap-4 max-w-md text-center">
+              <div className="p-3 bg-destructive/10 text-destructive rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              </div>
+              <h3 className="font-semibold text-lg">Error al cargar la encuesta</h3>
+              <p className="text-muted-foreground">{loadError}</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline" 
+                size="sm"
+                className="mt-2"
+              >
+                Reintentar
+              </Button>
+            </div>
           </div>
         )}
         

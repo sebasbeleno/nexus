@@ -45,14 +45,27 @@ export function ResponseSummary({ survey, responses, onBack }: ResponseSummaryPr
       case 'select':
       case 'radio':
         const option = question.options?.find(o => o.value === value);
-        return option ? option.label : value;
+        // Handle "other" option case
+        if (option) {
+          return option.label;
+        } else if (question.hasOtherOption) {
+          // This is a custom "other" value
+          return `Otro: ${value}`;
+        }
+        return value;
       
       case 'multiselect':
       case 'checkbox':
         if (Array.isArray(value)) {
           return value.map(v => {
             const option = question.options?.find(o => o.value === v);
-            return option ? option.label : v;
+            // Handle "other" option in multi-select questions
+            if (option) {
+              return option.label;
+            } else if (question.hasOtherOption) {
+              return `Otro: ${v}`;
+            }
+            return v;
           }).join(", ");
         }
         return String(value);
@@ -100,6 +113,52 @@ export function ResponseSummary({ survey, responses, onBack }: ResponseSummaryPr
     }
   };
 
+  // Function to check if a question should be shown based on conditional logic
+  const shouldShowQuestion = (question: Question): boolean => {
+    if (!question.conditionalLogic || !question.conditionalLogic.enabled) {
+      return true;
+    }
+
+    const { conditionalLogic } = question;
+    const { conditions, logic } = conditionalLogic;
+
+    const evaluateCondition = (condition: any) => {
+      const { questionId, operator, value } = condition;
+      const response = responses[questionId];
+
+      if (response === undefined) return false;
+
+      switch (operator) {
+        case 'equals':
+          return response === value;
+        case 'notEquals':
+          return response !== value;
+        case 'greaterThan':
+          return response > value;
+        case 'lessThan':
+          return response < value;
+        case 'contains':
+          return Array.isArray(response)
+            ? response.includes(value)
+            : String(response).includes(String(value));
+        case 'isEmpty':
+          return response === '' || response === null || 
+                 (Array.isArray(response) && response.length === 0);
+        case 'isNotEmpty':
+          return response !== '' && response !== null && 
+                 (!Array.isArray(response) || response.length > 0);
+        default:
+          return false;
+      }
+    };
+
+    if (logic === 'AND') {
+      return conditions.every(evaluateCondition);
+    } else {
+      return conditions.some(evaluateCondition);
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -119,7 +178,7 @@ export function ResponseSummary({ survey, responses, onBack }: ResponseSummaryPr
       <CardContent className="space-y-6">
         {survey.sections.map((section) => {
           const isExpanded = expandedSections[section.id] !== false; // Default to expanded
-          const sectionQuestions = section.questions.filter(q => q.id in responses);
+          const sectionQuestions = section.questions.filter(q => q.id in responses && shouldShowQuestion(q));
           
           if (sectionQuestions.length === 0) return null;
           

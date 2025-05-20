@@ -190,7 +190,10 @@ export function SurveyPreview({ sections, onComplete }: SurveyPreviewProps) {
 
   // Create form with safe handling of possibly undefined currentSection
   const currentSchema = currentSection ? generateSectionSchema(currentSection) : z.object({});
-  const form = useForm<any>({
+  
+  // Use explicit any type to avoid TypeScript recursion issues with dynamic schemas
+  const form = useForm({
+    // @ts-ignore: Using dynamic schema
     resolver: zodResolver(currentSchema),
     defaultValues: responses,
   });
@@ -215,6 +218,13 @@ export function SurveyPreview({ sections, onComplete }: SurveyPreviewProps) {
   // Handle navigation between sections
   const handlePrevious = () => {
     if (!isFirstSection) {
+      // Save current responses before navigating
+      const sectionResponses = form.getValues();
+      setResponses(prev => ({
+        ...prev,
+        ...sectionResponses
+      }));
+      
       setCurrentSectionIndex(prevIndex => prevIndex - 1);
     }
   };
@@ -229,27 +239,36 @@ export function SurveyPreview({ sections, onComplete }: SurveyPreviewProps) {
     }
 
     const sectionResponses = form.getValues();
-    setResponses(prev => ({
-      ...prev,
-      ...sectionResponses
-    }));
-
-    if (isLastSection) {
-      setIsSubmitting(true);
-      try {
-        onComplete({
-          ...responses,
-          ...sectionResponses
-        });
-      } catch (error) {
-        console.error("Error completing preview:", error);
-        toast.error("Error al completar la vista previa");
-      } finally {
-        setIsSubmitting(false);
+    
+    // Save responses and update state
+    setResponses(prev => {
+      const updatedResponses = {
+        ...prev,
+        ...sectionResponses
+      };
+      
+      // If we're in the last section, complete the survey
+      if (isLastSection) {
+        setIsSubmitting(true);
+        try {
+          // Process any "other" values before submitting
+          const processedResponses = { ...updatedResponses };
+          
+          // Complete the survey with processed responses
+          onComplete(processedResponses);
+        } catch (error) {
+          console.error("Error processing survey responses:", error);
+          toast.error("Error al procesar las respuestas");
+        } finally {
+          setIsSubmitting(false);
+        }
+      } else {
+        // Navigate to the next section
+        setCurrentSectionIndex(prevIndex => prevIndex + 1);
       }
-    } else {
-      setCurrentSectionIndex(prevIndex => prevIndex + 1);
-    }
+      
+      return updatedResponses;
+    });
   };
 
   const renderQuestion = (question: Question) => {
@@ -312,33 +331,77 @@ export function SurveyPreview({ sections, onComplete }: SurveyPreviewProps) {
             key={question.id}
             control={form.control}
             name={question.id}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{question.label}</FormLabel>
-                {question.description && (
-                  <p className="text-sm text-muted-foreground">{question.description}</p>
-                )}
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  value={field.value || ""}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={question.placeholder || "Seleccionar opción"} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {question.options?.map(option => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              // State for handling "other" option
+              const [otherValue, setOtherValue] = useState("");
+              const [showOtherInput, setShowOtherInput] = useState(false);
+              
+              // Check if we have a value not in predefined options
+              useEffect(() => {
+                if (field.value && !question.options?.find(opt => opt.value === field.value) && question.hasOtherOption) {
+                  setOtherValue(field.value);
+                  setShowOtherInput(true);
+                }
+              }, []);
+              
+              // Handle value change for select
+              const handleSelectChange = (value: string) => {
+                if (value === "_other_") {
+                  setShowOtherInput(true);
+                  field.onChange(otherValue || "");
+                } else {
+                  setShowOtherInput(false);
+                  field.onChange(value);
+                }
+              };
+
+              return (
+                <FormItem>
+                  <FormLabel>{question.label}</FormLabel>
+                  {question.description && (
+                    <p className="text-sm text-muted-foreground">{question.description}</p>
+                  )}
+                  <div className="space-y-2">
+                    <Select
+                      onValueChange={handleSelectChange}
+                      defaultValue={field.value}
+                      value={showOtherInput ? "_other_" : field.value || ""}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={question.placeholder || "Seleccionar opción"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {question.options?.map(option => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                        
+                        {question.hasOtherOption && (
+                          <SelectItem value="_other_">Otro</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    
+                    {showOtherInput && (
+                      <Input
+                        placeholder="Especificar..."
+                        value={otherValue}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          setOtherValue(newValue);
+                          field.onChange(newValue);
+                        }}
+                        className="mt-2"
+                      />
+                    )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         );
 
@@ -348,32 +411,80 @@ export function SurveyPreview({ sections, onComplete }: SurveyPreviewProps) {
             key={question.id}
             control={form.control}
             name={question.id}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{question.label}</FormLabel>
-                {question.description && (
-                  <p className="text-sm text-muted-foreground">{question.description}</p>
-                )}
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    value={field.value || ""}
-                    className="flex flex-col space-y-1"
-                  >
-                    {question.options?.map(option => (
-                      <div key={option.value} className="flex items-center space-x-3">
-                        <RadioGroupItem value={option.value} id={`${question.id}-${option.value}`} />
-                        <FormLabel htmlFor={`${question.id}-${option.value}`} className="font-normal">
-                          {option.label}
-                        </FormLabel>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              // Handle "other" option with a separate input field
+              const [showOtherInput, setShowOtherInput] = useState(false);
+              const [otherValue, setOtherValue] = useState("");
+              
+              // Check if we have an "other" value that's not in the predefined options
+              useEffect(() => {
+                if (field.value && !question.options?.find(opt => opt.value === field.value)) {
+                  setShowOtherInput(true);
+                  setOtherValue(field.value);
+                  field.onChange("_other_");
+                }
+              }, []);
+
+              return (
+                <FormItem>
+                  <FormLabel>{question.label}</FormLabel>
+                  {question.description && (
+                    <p className="text-sm text-muted-foreground">{question.description}</p>
+                  )}
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={(value) => {
+                        if (value === "_other_") {
+                          setShowOtherInput(true);
+                          field.onChange(otherValue || "_other_");
+                        } else {
+                          setShowOtherInput(false);
+                          field.onChange(value);
+                        }
+                      }}
+                      defaultValue={field.value}
+                      value={showOtherInput ? "_other_" : field.value || ""}
+                      className="flex flex-col space-y-1"
+                    >
+                      {question.options?.map(option => (
+                        <div key={option.value} className="flex items-center space-x-3">
+                          <RadioGroupItem value={option.value} id={`${question.id}-${option.value}`} />
+                          <FormLabel htmlFor={`${question.id}-${option.value}`} className="font-normal">
+                            {option.label}
+                          </FormLabel>
+                        </div>
+                      ))}
+                      
+                      {/* Show "Other" option if hasOtherOption is true */}
+                      {question.hasOtherOption && (
+                        <div className="flex flex-col space-y-2">
+                          <div className="flex items-center space-x-3">
+                            <RadioGroupItem value="_other_" id={`${question.id}-other`} />
+                            <FormLabel htmlFor={`${question.id}-other`} className="font-normal">
+                              Otro
+                            </FormLabel>
+                          </div>
+                          
+                          {showOtherInput && (
+                            <Input
+                              className="ml-6 max-w-xs"
+                              value={otherValue}
+                              onChange={(e) => {
+                                setOtherValue(e.target.value);
+                                // Update the form field value with the new "other" value
+                                field.onChange(e.target.value);
+                              }}
+                              placeholder="Especificar..."
+                            />
+                          )}
+                        </div>
+                      )}
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         );
 
@@ -383,51 +494,134 @@ export function SurveyPreview({ sections, onComplete }: SurveyPreviewProps) {
             key={question.id}
             control={form.control}
             name={question.id}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{question.label}</FormLabel>
-                {question.description && (
-                  <p className="text-sm text-muted-foreground">{question.description}</p>
-                )}
-                <div className="space-y-2">
-                  {question.options?.map(option => (
-                    <FormField
-                      key={option.value}
-                      control={form.control}
-                      name={question.id}
-                      render={({ field }) => {
-                        return (
-                          <FormItem
-                            key={option.value}
-                            className="flex flex-row items-start space-x-3 space-y-0"
-                          >
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value?.includes(option.value)}
-                                onCheckedChange={(checked) => {
-                                  const currentValue = Array.isArray(field.value) ? field.value : [];
-                                  return checked
-                                    ? field.onChange([...currentValue, option.value])
-                                    : field.onChange(
-                                        currentValue.filter(
-                                          (value: string) => value !== option.value
-                                        )
-                                      );
-                                }}
-                              />
-                            </FormControl>
-                            <FormLabel className="font-normal">
-                              {option.label}
-                            </FormLabel>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              // State for handling the "other" option
+              const [otherValue, setOtherValue] = useState("");
+              const [isOtherChecked, setIsOtherChecked] = useState(false);
+              
+              // Check if we have any custom "other" values in the current selection
+              useEffect(() => {
+                if (Array.isArray(field.value)) {
+                  const validOptions = question.options?.map(opt => opt.value) || [];
+                  const customValues = field.value.filter(val => !validOptions.includes(val));
+                  
+                  if (customValues.length > 0) {
+                    setIsOtherChecked(true);
+                    setOtherValue(customValues[0]);
+                  }
+                }
+              }, []);
+
+              // Function to handle changes to the "other" checkbox
+              const handleOtherCheckChange = (checked: boolean) => {
+                setIsOtherChecked(checked);
+                
+                const currentValues = Array.isArray(field.value) ? [...field.value] : [];
+                
+                if (checked && otherValue) {
+                  // Add the otherValue to the current values
+                  field.onChange([...currentValues.filter(val => {
+                    const validOptions = question.options?.map(opt => opt.value) || [];
+                    return validOptions.includes(val);
+                  }), otherValue]);
+                } else {
+                  // Remove the custom values from the selection
+                  field.onChange(currentValues.filter(val => {
+                    const validOptions = question.options?.map(opt => opt.value) || [];
+                    return validOptions.includes(val);
+                  }));
+                }
+              };
+              
+              // Function to handle changes to the "other" input
+              const handleOtherValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                const newValue = e.target.value;
+                setOtherValue(newValue);
+                
+                if (isOtherChecked) {
+                  const validOptions = question.options?.map(opt => opt.value) || [];
+                  const currentValues = Array.isArray(field.value) ? [...field.value] : [];
+                  
+                  // Remove any previous custom values
+                  const filteredValues = currentValues.filter(val => validOptions.includes(val));
+                  
+                  // Add the new custom value
+                  field.onChange([...filteredValues, newValue]);
+                }
+              };
+
+              return (
+                <FormItem>
+                  <FormLabel>{question.label}</FormLabel>
+                  {question.description && (
+                    <p className="text-sm text-muted-foreground">{question.description}</p>
+                  )}
+                  <div className="space-y-2">
+                    {question.options?.map(option => (
+                      <FormField
+                        key={option.value}
+                        control={form.control}
+                        name={question.id}
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={option.value}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(option.value)}
+                                  onCheckedChange={(checked) => {
+                                    const currentValue = Array.isArray(field.value) ? field.value : [];
+                                    return checked
+                                      ? field.onChange([...currentValue, option.value])
+                                      : field.onChange(
+                                          currentValue.filter(
+                                            (value: string) => value !== option.value
+                                          )
+                                        );
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                {option.label}
+                              </FormLabel>
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    ))}
+
+                    {/* Add "Other" option */}
+                    {question.hasOtherOption && (
+                      <div className="flex flex-col gap-2">
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={isOtherChecked}
+                              onCheckedChange={handleOtherCheckChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="font-normal">
+                            Otro
+                          </FormLabel>
+                        </FormItem>
+                        
+                        {isOtherChecked && (
+                          <Input
+                            className="ml-6 max-w-xs"
+                            value={otherValue}
+                            onChange={handleOtherValueChange}
+                            placeholder="Especificar..."
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
         );
 
