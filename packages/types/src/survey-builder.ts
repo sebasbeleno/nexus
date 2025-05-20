@@ -59,6 +59,7 @@ export interface Question {
   options?: QuestionOption[];
   validations?: ValidationRule[];
   conditionalLogic?: ConditionalLogic;
+  hasOtherOption?: boolean;  // Added to support "Other" option for checkbox/radio
 }
 
 export interface Section {

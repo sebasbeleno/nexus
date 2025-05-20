@@ -57,6 +57,9 @@ export function QuestionCard({ question, sectionId }: QuestionCardProps) {
   const renderQuestionType = () => (
     <Badge variant="secondary" className="ml-2">
       {question.type}
+      {(question.type === 'radio' || question.type === 'multiselect') && question.hasOtherOption && (
+        <span className="ml-1">+ Otro</span>
+      )}
     </Badge>
   );
 

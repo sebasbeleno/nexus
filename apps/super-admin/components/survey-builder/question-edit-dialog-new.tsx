@@ -122,7 +122,7 @@ export function QuestionEditDialog({
       description: description || undefined,
       // Siempre actualizamos las validaciones, incluso cuando se han eliminado todas
       validations: validations.length > 0 ? validations : [],
-      hasOtherOption: ['radio', 'checkbox', 'multiselect'].includes(questionType) ? hasOtherOption : undefined,
+      hasOtherOption: ['radio', 'checkbox'].includes(questionType) ? hasOtherOption : undefined,
     };
 
     // Actualizamos opciones si existen
@@ -363,7 +363,7 @@ export function QuestionEditDialog({
               )}
               
               {/* Other Option Switch - Only for radio and checkbox */}
-              {['radio', 'multiselect', 'checkbox'].includes(questionType) && (
+              {['radio', 'checkbox'].includes(questionType) && (
                 <div className="flex items-center space-x-2 mt-4">
                   <Switch 
                     id="has-other-option"
