@@ -9,19 +9,19 @@ import { SettingsTab } from "./components/settings-tab";
 import { ProjectsTab } from "./components/projects-tab";
 import { use } from "react";
 
-export default async function OrganizationDetailsPage({ 
+export default function OrganizationDetailsPage({ 
   params 
 }: { 
   params: Promise<{ name: string }>
 }) {
   const { name } = use(params);
   const organizationName = decodeURIComponent(name);
-  const supabase = await createClient();
+  const supabase =  use(createClient());
   
   // Verify user authentication
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = use(supabase.auth.getUser());
 
   if (!user) {
     return redirect("/");
@@ -29,14 +29,14 @@ export default async function OrganizationDetailsPage({
   
   try {
     // Fetch organization details by name
-    const { data: organization, error } = await supabase
+    const { data: organization, error } = use(supabase
       .from('organizations')
       .select(`
         *,
         active_users:profiles(count)
       `)
       .eq('name', organizationName)
-      .single();
+      .single());
       
     if (error) {
       console.error('Error fetching organization:', error);
