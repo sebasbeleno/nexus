@@ -159,124 +159,112 @@ export default function EditSurveyPage({ params }: { params: Promise<{ id: strin
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <div className="flex flex-col gap-4">
+      <div className="container mx-auto py-4 border-b">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Link href={`/projects/${projectId}/surveys/${survey_id}`}>
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-2 w-4 h-4" /> Volver a la Encuesta
-              </Button>
+          <div className="flex items-center gap-4">
+            <Link
+              href={`/projects/${projectId}/surveys/${survey_id}`}
+              className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver a Encuestas
             </Link>
+            <h1 className="text-xl font-semibold">{survey.title || "Nueva Encuesta"}</h1>
+          </div>
+          <div className="flex items-center gap-3">
             <Button
-              variant={isPreviewMode ? "outline" : "secondary"}
+              variant="outline"
               size="sm"
               onClick={handleTogglePreviewMode}
-              disabled={isLoading || survey.sections.length === 0}
+              className="gap-2"
             >
-              {isPreviewMode ? (
-                <>
-                  <Pencil className="mr-2 w-4 h-4" /> Modo Edición
-                </>
-              ) : (
-                <>
-                  <Eye className="mr-2 w-4 h-4" /> Vista Previa
-                </>
-              )}
+              {isPreviewMode ? <Pencil className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {isPreviewMode ? "Editar" : "Vista previa"}
+            </Button>
+            <Button
+              onClick={handleSaveChanges}
+              size="sm"
+              className="gap-2"
+              disabled={isSaving}
+            >
+              <Save className="h-4 w-4" />
+              {isSaving ? "Guardando..." : "Guardar"}
             </Button>
           </div>
-          <Button 
-            onClick={handleSaveChanges}
-            disabled={isSaving || isLoading || isPreviewMode}
-          >
-            <Save className="mr-2 w-4 h-4" /> {isSaving ? 'Guardando...' : 'Guardar Cambios'}
-          </Button>
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold mb-1">{survey.title || "Cargando..."}</h1>
-          {survey.description && <p className="text-muted-foreground">{survey.description}</p>}
         </div>
       </div>
       
-      {isLoading && (
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Cargando estructura de la encuesta...</p>
+      <div className="flex-1 container mx-auto relative">
+        {isLoading && (
+          <div className="flex justify-center items-center h-64">
           </div>
-        </div>
-      )}
-      
-      {!isLoading && loadError && (
-        <div className="flex justify-center items-center h-64">
-          <div className="text-center p-6 bg-destructive/10 rounded-lg max-w-md">
-            <div className="text-destructive text-4xl mb-4">⚠️</div>
-            <h3 className="text-lg font-semibold mb-2">Error al cargar la encuesta</h3>
-            <p className="text-muted-foreground mb-4">{loadError}</p>
-            <Button 
-              variant="outline" 
-              onClick={() => router.push(`/projects/${projectId}/surveys`)}
-            >
-              Volver a la lista de encuestas
-            </Button>
+        )}
+        
+        {!isLoading && loadError && (
+          <div className="flex justify-center items-center h-64">
           </div>
-        </div>
-      )}
-      
-      {!isLoading && !loadError && (
-        <>
-          {isPreviewMode ? (
-            <div className="flex justify-center">
-              <div className="w-full max-w-3xl">
-                <SurveyPreviewContainer 
-                  survey={survey} 
-                  onClose={handleTogglePreviewMode} 
-                />
+        )}
+        
+        {!isLoading && !loadError && (
+          <>
+            {isPreviewMode ? (
+              <div className="flex justify-center py-6">
+                <div className="w-full max-w-3xl">
+                  <SurveyPreviewContainer 
+                    survey={survey} 
+                    onClose={handleTogglePreviewMode} 
+                  />
+                </div>
               </div>
-            </div>
-          ) : (
-            /* Main Grid Layout */
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {/* Left Sidebar - Section List */}
-              <div className="col-span-1">
-                <SectionList
-                  onSelectSection={setSelectedSectionId}
-                  selectedSectionId={selectedSectionId}
-                  onSectionSettings={handleSectionSettings}
-                />
-              </div>
-              
-              {/* Main Content Area */}
-              <div className="col-span-1 md:col-span-2">
-                {selectedSectionId ? (
-                  <SectionEditor sectionId={selectedSectionId} />
-                ) : (
-                  <div className="h-full flex items-center justify-center border-2 border-dashed rounded-lg p-6">
-                    <div className="text-center">
-                      <p className="text-muted-foreground mb-4">Seleccione una sección para editar o cree una nueva</p>
-                      <Button onClick={() => addQuestion(selectedSectionId!, 'text')} disabled={!selectedSectionId}>
-                        Añadir Pregunta
-                      </Button>
-                    </div>
+            ) : (
+              /* Main Grid Layout */
+              <div className="py-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {/* Left Sidebar - Section List */}
+                <div className="col-span-1">
+                  <div className="sticky top-6">
+                    <SectionList
+                      onSelectSection={setSelectedSectionId}
+                      selectedSectionId={selectedSectionId}
+                      onSectionSettings={handleSectionSettings}
+                    />
                   </div>
-                )}
+                </div>
+                
+                {/* Main Content Area */}
+                <div className="col-span-1 md:col-span-2">
+                  {selectedSectionId ? (
+                    <SectionEditor sectionId={selectedSectionId} />
+                  ) : (
+                    <div className="h-full flex items-center justify-center border-2 border-dashed rounded-lg p-6">
+                      <div className="text-center">
+                        <p className="text-muted-foreground mb-4">Seleccione una sección para editar o cree una nueva</p>
+                        <Button onClick={() => addQuestion(selectedSectionId!, 'text')} disabled={!selectedSectionId}>
+                          Añadir Pregunta
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Right Sidebar - Question Types */}
+                <div className="col-span-1">
+                  <div className="sticky top-6">
+                    <QuestionTypeCard onSelect={handleQuestionTypeSelect} />
+                  </div>
+                </div>
               </div>
-              
-              {/* Right Sidebar - Question Types */}
-              <div className="col-span-1">
-                <QuestionTypeCard onSelect={handleQuestionTypeSelect} />
-              </div>
-            </div>
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
 
-      <SectionSettingsDialog
-        sectionId={selectedSectionId}
-        isOpen={isSectionSettingsOpen}
-        onOpenChange={setIsSectionSettingsOpen}
-      />
+        <SectionSettingsDialog
+          sectionId={selectedSectionId}
+          isOpen={isSectionSettingsOpen}
+          onOpenChange={setIsSectionSettingsOpen}
+        />
+      </div>
     </div>
   );
 }
