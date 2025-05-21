@@ -21,6 +21,7 @@ interface SurveyStore {
 	addQuestion: (sectionId: string, type: QuestionType) => void;
 	deleteQuestion: (sectionId: string, questionId: string) => void;
 	updateQuestion: (sectionId: string, questionId: string, question: Partial<Question>) => void;
+	reorderQuestions: (sectionId: string, orderedIds: string[]) => void;
 }
 
 // Empty survey structure template
@@ -176,5 +177,30 @@ export const useSurveyStore = create<SurveyStore>((set) => ({
 						: section
 				)
 			}
-		}))
+		})),
+
+	reorderQuestions: (sectionId, orderedIds) =>
+		set((state) => {
+			const section = state.survey.sections.find(s => s.id === sectionId);
+			if (!section) return state;
+
+			const questionMap = new Map(
+				section.questions.map(question => [question.id, question])
+			);
+
+			const reorderedQuestions = orderedIds
+				.map(id => questionMap.get(id))
+				.filter((question): question is Question => question !== undefined);
+
+			return {
+				survey: {
+					...state.survey,
+					sections: state.survey.sections.map(s =>
+						s.id === sectionId
+							? { ...s, questions: reorderedQuestions }
+							: s
+					)
+				}
+			};
+		}),
 }));
