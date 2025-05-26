@@ -6,14 +6,13 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@workspace
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@workspace/ui/components/form";
 import { Input } from "@workspace/ui/components/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@workspace/ui/components/select";
-import { Textarea } from "@workspace/ui/components/textarea";
 import { RadioGroup, RadioGroupItem } from "@workspace/ui/components/radio-group";
 import { Checkbox } from "@workspace/ui/components/checkbox";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { Section, Question, QuestionType, ValidationTypes, ConditionalLogic } from "@workspace/types";
+import { Section, Question } from "@workspace/types";
 import { toast } from "sonner";
 
 interface SurveyPreviewProps {
@@ -191,9 +190,8 @@ export function SurveyPreview({ sections, onComplete }: SurveyPreviewProps) {
   // Create form with safe handling of possibly undefined currentSection
   const currentSchema = currentSection ? generateSectionSchema(currentSection) : z.object({});
   
-  // Use explicit any type to avoid TypeScript recursion issues with dynamic schemas
-  const form = useForm({
-    // @ts-ignore: Using dynamic schema
+  // Use explicit Record<string, any> type to allow dynamic question IDs as field names
+  const form = useForm<Record<string, any>>({
     resolver: zodResolver(currentSchema),
     defaultValues: responses,
   });
@@ -211,7 +209,7 @@ export function SurveyPreview({ sections, onComplete }: SurveyPreviewProps) {
     }, {} as Record<string, any>);
 
     Object.keys(sectionResponses).forEach(key => {
-      form.setValue(key, sectionResponses[key]);
+      return form.setValue(key, sectionResponses[key]);
     });
   }, [currentSection, responses, form]);
 
